@@ -1,0 +1,138 @@
+.tx-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 8px;
+}
+
+.tx-amount-display {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 0 4px;
+}
+
+.tx-currency {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink-400);
+}
+
+.tx-amount-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--ink-900);
+  text-align: center;
+  min-width: 0;
+  width: 100%;
+  max-width: 240px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tx-amount-input::placeholder {
+  color: var(--ink-400);
+  opacity: 0.5;
+}
+
+.tx-category-row {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tx-category-row::-webkit-scrollbar {
+  display: none;
+}
+
+.tx-cat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  font-family: inherit;
+}
+
+.tx-cat-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--ease);
+}
+
+.tx-cat.active .tx-cat-icon {
+  box-shadow: var(--shadow-btn);
+}
+
+.tx-cat-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-600);
+  max-width: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.tx-cat.active .tx-cat-name {
+  color: var(--blue-500);
+}
+
+.tx-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: white;
+  min-height: 44px;
+}
+
+.tx-row-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--ink-400);
+  min-width: 48px;
+}
+
+.tx-row-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--ink-900);
+  min-width: 0;
+}
+
+.tx-row-input:focus {
+  outline: none;
+}
+
+.tx-sheet-footer {
+  position: sticky;
+  bottom: 0;
+  padding-top: 12px;
+  background: linear-gradient(to bottom, transparent, white 30%);
+}

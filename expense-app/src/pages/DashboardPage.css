@@ -1,0 +1,221 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 24px;
+  position: relative;
+}
+
+.dashboard-month {
+  margin-top: 0;
+}
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.dashboard-spacer {
+  height: 20px;
+}
+
+.dashboard-viewall {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--blue-500);
+  text-decoration: none;
+}
+
+.dashboard-viewall:hover {
+  text-decoration: underline;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--grad-hero);
+  color: white;
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  padding: 46px 24px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hero-blob {
+  position: absolute;
+  top: -40px;
+  right: -60px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+.hero-badge {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  backdrop-filter: blur(6px);
+}
+
+.hero-net {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-split {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.hero-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.hero-mini-icon {
+  color: rgba(255, 255, 255, 0.85);
+  flex-shrink: 0;
+}
+
+.hero-mini-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.hero-mini-value {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: white;
+  font-family: "JetBrains Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+
+.hero-divider {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dashboard-recent {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recent-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.recent-row:last-child {
+  border-bottom: none;
+}
+
+.recent-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.recent-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.recent-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-date {
+  font-size: 11.5px;
+  color: var(--ink-400);
+  margin-top: 2px;
+}
+
+.recent-amt {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13.5px;
+  font-weight: 700;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.recent-amt.income {
+  color: var(--green-500);
+}
+
+.recent-amt.expense {
+  color: var(--ink-900);
+}
+
+.dashboard-fab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(80px + env(safe-area-inset-bottom));
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--grad-btn);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-btn);
+  transition: var(--ease);
+  z-index: 40;
+}
+
+.dashboard-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-btn-hover);
+}
+
+.dashboard-fab:active {
+  transform: translateY(0) scale(0.96);
+}
+
+@media (min-width: 720px) {
+  .dashboard-stats {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
