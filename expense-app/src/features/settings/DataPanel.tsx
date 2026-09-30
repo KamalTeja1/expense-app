@@ -6,6 +6,7 @@ import { toast } from '../../components/ui/Toast';
 import { exportAll, importAll, db } from '../../lib/db';
 import type { BackupPayload } from '../../lib/types';
 import './DataPanel.css';
+import { todayLocal } from '../../lib/format';
 
 export default function DataPanel() {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -18,7 +19,7 @@ export default function DataPanel() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `expense-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `expense-backup-${todayLocal()}.json`;
     a.click();
     URL.revokeObjectURL(url);
     toast('Exported', 'success');

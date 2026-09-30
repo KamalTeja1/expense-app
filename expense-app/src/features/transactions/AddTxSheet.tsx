@@ -8,13 +8,14 @@ import { toast } from '../../components/ui/Toast';
 import { useAddTxBus } from '../../store/addTxBus';
 import { useAppStore } from '../../store/useAppStore';
 import { createTx, updateTx, getAllCategories } from '../../lib/db';
-import { parseMoneyToMinor } from '../../lib/format';
+import { parseMoneyToMinor, todayLocal } from '../../lib/format';
 import { ICON_MAP } from '../../lib/categories';
 import type { TxType } from '../../lib/types';
 import './AddTxSheet.css';
 
+
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return todayLocal();
 }
 
 function currencySymbol(currency: string): string {

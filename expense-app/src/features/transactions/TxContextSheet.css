@@ -1,0 +1,35 @@
+.ctx-root {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 12px;
+}
+
+.ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-900);
+  text-align: left;
+  transition: var(--ease);
+}
+
+.ctx-item:hover {
+  background: #eef6fb;
+}
+
+.ctx-item.danger {
+  color: var(--red-500);
+}
+
+.ctx-item.danger:hover {
+  background: var(--red-100);
+}

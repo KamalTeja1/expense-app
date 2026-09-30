@@ -6,6 +6,7 @@ import { useAddTxBus } from '../../store/addTxBus';
 import { softDeleteTx } from '../../lib/db';
 import { toast } from '../../components/ui/Toast';
 import type { Transaction } from '../../lib/types';
+import TxContextSheet from './TxContextSheet';
 import './TxRow.css';
 
 export interface TxRowProps {
@@ -18,7 +19,10 @@ const SWIPE = 88;
 export default function TxRow({ tx, currency }: TxRowProps) {
   const openSheet = useAddTxBus((s) => s.openSheet);
   const [dx, setDx] = useState(0);
+  const [ctxOpen, setCtxOpen] = useState(false);
   const startX = useRef<number | null>(null);
+  const longPressTimer = useRef<number | null>(null);
+  const movedRef = useRef(false);
 
   const cat = getCategory(tx.categoryId);
   const Icon = ICON_MAP[cat.icon];
@@ -26,17 +30,34 @@ export default function TxRow({ tx, currency }: TxRowProps) {
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     startX.current = e.clientX;
+    movedRef.current = false;
+    longPressTimer.current = window.setTimeout(() => {
+      if (!movedRef.current) {
+        setCtxOpen(true);
+      }
+    }, 550);
   };
 
   const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
     if (startX.current === null) return;
     const delta = e.clientX - startX.current;
+    if (Math.abs(delta) > 6) {
+      movedRef.current = true;
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+    }
     if (delta < 0) setDx(Math.max(-SWIPE, delta));
     else setDx(0);
   };
 
   const onPointerUp = () => {
     startX.current = null;
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
     setDx(dx < -SWIPE / 2 ? -SWIPE : 0);
   };
 
@@ -74,6 +95,7 @@ export default function TxRow({ tx, currency }: TxRowProps) {
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         onClick={() => {
+          if (ctxOpen) return;
           if (dx === 0) handleEdit();
           else setDx(0);
         }}
@@ -96,6 +118,8 @@ export default function TxRow({ tx, currency }: TxRowProps) {
           <div className="tx-row-date">{formatDayLabel(tx.date)}</div>
         </div>
       </div>
+
+      <TxContextSheet tx={ctxOpen ? tx : null} onClose={() => setCtxOpen(false)} />
     </div>
   );
 }

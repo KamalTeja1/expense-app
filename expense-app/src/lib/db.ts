@@ -7,7 +7,7 @@ import type {
   BackupPayload,
 } from './types';
 import { DEFAULT_CATEGORIES } from './categories';
-import { monthRange } from './format';
+import { monthRange, todayLocal } from './format';
 
 export class AppDB extends Dexie {
   transactions!: Table<Transaction, string>;
@@ -52,7 +52,7 @@ export async function createTx(partial: Partial<Transaction>): Promise<Transacti
     type: partial.type ?? 'expense',
     amountMinor: partial.amountMinor ?? 0,
     categoryId: partial.categoryId ?? 'other-expense',
-    date: partial.date ?? new Date().toISOString().slice(0, 10),
+    date: partial.date ?? todayLocal(),
     note: partial.note,
     createdAt: now,
     updatedAt: now,
