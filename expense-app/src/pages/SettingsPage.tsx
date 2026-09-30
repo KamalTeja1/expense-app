@@ -4,13 +4,19 @@ import Button from '../components/ui/Button';
 import { Card, CardBody, CardHeader } from '../components/ui/Card';
 import { toast } from '../components/ui/Toast';
 import CategoryManager from '../features/settings/CategoryManager';
+import BackupPanel from '../features/settings/BackupPanel';
+import DataPanel from '../features/settings/DataPanel';
+import PreferencesPanel from '../features/settings/PreferencesPanel';
 import { useAuth } from '../store/useAuth';
+import { useAutoBackup } from '../lib/useAutoBackup';
 import './SettingsPage.css';
 
 export default function SettingsPage() {
   const [catOpen, setCatOpen] = useState(false);
   const user = useAuth((s) => s.user);
   const signOut = useAuth((s) => s.signOut);
+
+  useAutoBackup();
 
   const handleSignOut = async () => {
     const confirmed = window.confirm(
@@ -27,9 +33,7 @@ export default function SettingsPage() {
       <Card>
         <CardBody>
           <div className="settings-account">
-            <div className="settings-avatar">
-              {(user?.email?.[0] ?? '?').toUpperCase()}
-            </div>
+            <div className="settings-avatar">{(user?.email?.[0] ?? '?').toUpperCase()}</div>
             <div>
               <div className="settings-email">{user?.email ?? 'Not signed in'}</div>
               <div className="settings-role">Local account</div>
@@ -37,6 +41,9 @@ export default function SettingsPage() {
           </div>
         </CardBody>
       </Card>
+
+      <PreferencesPanel />
+      <BackupPanel />
 
       <Card>
         <CardHeader title="Categories" />
@@ -48,6 +55,8 @@ export default function SettingsPage() {
           </button>
         </CardBody>
       </Card>
+
+      <DataPanel />
 
       <Card>
         <CardHeader title="Account" />
@@ -62,6 +71,8 @@ export default function SettingsPage() {
           </Button>
         </CardBody>
       </Card>
+
+      <p className="settings-foot">Expense App · v1.0</p>
 
       <CategoryManager open={catOpen} onClose={() => setCatOpen(false)} />
     </div>

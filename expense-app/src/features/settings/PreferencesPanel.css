@@ -1,0 +1,37 @@
+.pp-root {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pp-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--ink-400);
+}
+
+.pp-input {
+  padding: 10px 12px;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: white;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--ink-900);
+  outline: none;
+  transition: var(--ease);
+}
+
+.pp-input:focus {
+  border-color: var(--blue-375);
+  box-shadow: 0 0 0 3px rgba(64, 155, 210, 0.15);
+}

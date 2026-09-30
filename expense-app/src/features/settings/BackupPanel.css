@@ -1,0 +1,127 @@
+.bp2-root {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bp2-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bp2-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-400);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.bp2-value {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-900);
+  text-align: right;
+}
+
+.bp2-switch {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.bp2-switch::before {
+  content: "";
+  position: absolute;
+  top: 9px;
+  left: 0;
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--border);
+  transition: var(--ease);
+}
+
+.bp2-switch.on::before {
+  background: var(--grad-btn);
+}
+
+.bp2-switch-knob {
+  position: absolute;
+  top: 12px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  transition: var(--ease);
+  z-index: 1;
+}
+
+.bp2-switch.on .bp2-switch-knob {
+  left: 21px;
+}
+
+.bp2-hint {
+  font-size: 12px;
+  color: var(--ink-400);
+  line-height: 1.5;
+  padding: 10px 12px;
+  background: #f3f8fd;
+  border-radius: 8px;
+}
+
+.bp2-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bp2-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  background: rgba(6, 20, 32, 0.65);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.bp2-confirm {
+  background: white;
+  border-radius: 14px;
+  padding: 24px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.bp2-confirm-title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+
+.bp2-confirm-text {
+  margin: 0 0 20px;
+  font-size: 13.5px;
+  color: var(--ink-600);
+  line-height: 1.5;
+}
+
+.bp2-confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
