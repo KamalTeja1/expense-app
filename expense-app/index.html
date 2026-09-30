@@ -7,6 +7,7 @@
     <meta name="theme-color" content="#007AC3" />
     <meta name="description" content="Track monthly income and expenses offline." />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Expenses" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
@@ -19,6 +20,22 @@
     />
   </head>
   <body>
+    <script>
+  window.__deferredInstallPrompt = null;
+  window.__installPromptReady = false;
+
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    window.__deferredInstallPrompt = e;
+    window.__installPromptReady = true;
+    window.dispatchEvent(new Event('installpromptready'));
+  });
+
+  window.addEventListener('appinstalled', function () {
+    window.__deferredInstallPrompt = null;
+    window.__installPromptReady = false;
+  });
+</script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
