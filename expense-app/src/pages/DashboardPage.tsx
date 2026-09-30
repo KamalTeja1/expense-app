@@ -29,6 +29,7 @@ import TrendArea from '../components/charts/TrendArea';
 import CategoryBars from '../components/charts/CategoryBars';
 import MonthCompare from '../components/charts/MonthCompare';
 import './DashboardPage.css';
+import AnimatedNumber from '../components/ui/AnimatedNumber';
 
 function makeDelta(current: number, previous: number, prevLabel: string): string {
   if (previous === 0) return '';
@@ -106,7 +107,7 @@ export default function DashboardPage() {
       <section className="hero">
         <div className="hero-blob" aria-hidden />
         <span className="hero-badge">{monthLabel(monthKey)}</span>
-        <h1 className="hero-net">{formatMoney(summary?.netMinor ?? 0, currency)}</h1>
+        <h1 className="hero-net">  <AnimatedNumber value={summary?.netMinor ?? 0} currency={currency} /> </h1>
         <div className="hero-split">
           <div className="hero-mini">
             <ArrowDownLeft size={16} className="hero-mini-icon" />
