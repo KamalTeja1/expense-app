@@ -1,0 +1,114 @@
+.budget-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--ink-400);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--ease);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.budget-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.bc-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bc-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bc-title {
+  flex: 1;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bc-edit {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--ink-400);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--ease);
+}
+
+.bc-edit:hover {
+  background: #eef6fb;
+  color: var(--blue-500);
+}
+
+.bc-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #eef4f9;
+  overflow: hidden;
+}
+
+.bc-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bc-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bc-numbers {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-600);
+  font-variant-numeric: tabular-nums;
+}
+
+.bc-badge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.bc-green {
+  background: var(--green-100);
+  color: #5d8a12;
+}
+
+.bc-amber {
+  background: var(--amber-100);
+  color: #a87510;
+}
+
+.bc-red {
+  background: var(--red-100);
+  color: var(--red-500);
+}

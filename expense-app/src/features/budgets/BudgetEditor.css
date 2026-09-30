@@ -1,0 +1,43 @@
+.budget-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-bottom: 8px;
+}
+
+.be-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.be-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--ink-400);
+}
+
+.be-input {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink-900);
+  background: white;
+  outline: none;
+  transition: var(--ease);
+}
+
+.be-input:focus {
+  border-color: var(--blue-375);
+  box-shadow: 0 0 0 3px rgba(64, 155, 210, 0.15);
+}
+
+.be-actions {
+  display: flex;
+  gap: 10px;
+}

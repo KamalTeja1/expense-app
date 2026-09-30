@@ -1,0 +1,147 @@
+.budgets-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 24px;
+}
+
+.bp-title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--ink-900);
+  letter-spacing: -0.02em;
+}
+
+.bp-month {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-400);
+}
+
+.bp-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bp-hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bp-hero-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--ink-400);
+}
+
+.bp-hero-remaining {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--green-500);
+}
+
+.bp-hero-numbers {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--ink-900);
+  font-variant-numeric: tabular-nums;
+}
+
+.bp-hero-of {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-400);
+  font-family: "JetBrains Mono", monospace;
+}
+
+.bp-track {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: #eef4f9;
+  overflow: hidden;
+}
+
+.bp-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--grad-btn);
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bp-fill.over {
+  background: var(--red-500);
+}
+
+.bp-section-title {
+  margin: 0 0 10px;
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+
+.bp-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .bp-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.bp-unbudgeted {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bp-unbudgeted-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.bp-unbudgeted-row:last-child {
+  border-bottom: none;
+}
+
+.bp-unbudgeted-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.bp-set {
+  padding: 6px 12px;
+  min-height: 44px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--blue-500);
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: var(--ease);
+  font-family: inherit;
+}
+
+.bp-set:hover {
+  background: var(--blue-175);
+  border-color: transparent;
+}
