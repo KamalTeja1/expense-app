@@ -1,0 +1,124 @@
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px 28px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.auth-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.auth-mark {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--grad-btn);
+  color: white;
+  font-size: 26px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-btn);
+  font-family: "JetBrains Mono", monospace;
+}
+
+.auth-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ink-900);
+  letter-spacing: -0.02em;
+}
+
+.auth-sub {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-400);
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+.auth-warn {
+  padding: 10px 12px;
+  background: var(--amber-100);
+  color: #a87510;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--ink-400);
+}
+
+.auth-input {
+  padding: 12px 14px;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: white;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink-900);
+  outline: none;
+  transition: var(--ease);
+}
+
+.auth-input:focus {
+  border-color: var(--blue-375);
+  box-shadow: 0 0 0 3px rgba(64, 155, 210, 0.15);
+}
+
+.auth-error {
+  padding: 10px 12px;
+  background: var(--red-100);
+  color: var(--red-500);
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.auth-foot {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-400);
+  text-align: center;
+  line-height: 1.5;
+}
