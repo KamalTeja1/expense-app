@@ -1,0 +1,43 @@
+:root {
+  /* Colors */
+  --blue-375: #409BD2;
+  --blue-175: #A6D1EA;
+  --blue-500: #007AC3;
+  --green-500: #85BC20;
+  --green-100: #eef6dc;
+  --red-500: #E5202E;
+  --red-100: #fdeced;
+  --red-200: #f6c7cb;
+  --amber-500: #E8A317;
+  --amber-100: #fdf3dd;
+  --ink-900: #0c2536;
+  --ink-600: #46586a;
+  --ink-400: #7c8ea0;
+
+  /* Backgrounds & Surfaces */
+  --bg: #eef4f9;
+  --surface: #fff;
+  --border: #e4edf5;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 4px rgba(12, 37, 54, .06);
+  --shadow-md: 0 6px 20px rgba(12, 37, 54, .10);
+  --shadow-lg: 0 16px 40px rgba(12, 37, 54, .16);
+  --shadow-btn: 0 6px 18px rgba(0, 122, 195, .30);
+  --shadow-btn-hover: 0 10px 24px rgba(0, 122, 195, .38);
+
+  /* Gradients */
+  --grad-hero: linear-gradient(125deg, #005c95, #007AC3 40%, #409BD2 75%, #85BC20 140%);
+  --grad-btn: linear-gradient(120deg, #007AC3, #409BD2);
+  --grad-thead: linear-gradient(120deg, #0c2536, #123c58);
+  --grad-card: linear-gradient(160deg, #f7fbff, #eef6fc);
+
+  /* Radii */
+  --r-card: 14px;
+  --r-btn: 10px;
+  --r-badge: 20px;
+  --r-code: 6px;
+
+  /* Timing */
+  --ease: .15s ease;
+}
