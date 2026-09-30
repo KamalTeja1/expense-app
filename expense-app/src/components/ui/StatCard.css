@@ -1,0 +1,81 @@
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow-sm);
+  border-left: 5px solid var(--ink-400);
+  transition: var(--ease);
+}
+
+.stat-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.stat-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--ink-400);
+}
+
+.stat-icon {
+  color: var(--ink-400);
+  flex-shrink: 0;
+}
+
+.stat-value {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--ink-900);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-delta {
+  margin-top: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-400);
+}
+
+.stat-income {
+  border-left-color: var(--green-500);
+}
+
+.stat-income .stat-icon {
+  color: var(--green-500);
+}
+
+.stat-expense {
+  border-left-color: var(--red-500);
+}
+
+.stat-expense .stat-icon {
+  color: var(--red-500);
+}
+
+.stat-warn {
+  border-left-color: var(--amber-500);
+}
+
+.stat-warn .stat-icon {
+  color: var(--amber-500);
+}
+
+.stat-neutral {
+  border-left-color: var(--blue-500);
+}
+
+.stat-neutral .stat-icon {
+  color: var(--blue-500);
+}
