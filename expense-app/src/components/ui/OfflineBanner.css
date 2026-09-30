@@ -1,0 +1,15 @@
+.offline-banner {
+  position: sticky;
+  top: 56px;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--amber-100);
+  color: #a87510;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(232, 163, 23, 0.25);
+}
