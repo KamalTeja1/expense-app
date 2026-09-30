@@ -1,0 +1,101 @@
+import { useRef, useState, type PointerEvent } from 'react';
+import { Pencil, Trash2 } from 'lucide-react';
+import { ICON_MAP, getCategory } from '../../lib/categories';
+import { formatMoney, formatDayLabel } from '../../lib/format';
+import { useAddTxBus } from '../../store/addTxBus';
+import { softDeleteTx } from '../../lib/db';
+import { toast } from '../../components/ui/Toast';
+import type { Transaction } from '../../lib/types';
+import './TxRow.css';
+
+export interface TxRowProps {
+  tx: Transaction;
+  currency: string;
+}
+
+const SWIPE = 88;
+
+export default function TxRow({ tx, currency }: TxRowProps) {
+  const openSheet = useAddTxBus((s) => s.openSheet);
+  const [dx, setDx] = useState(0);
+  const startX = useRef<number | null>(null);
+
+  const cat = getCategory(tx.categoryId);
+  const Icon = ICON_MAP[cat.icon];
+  const isIncome = tx.type === 'income';
+
+  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    startX.current = e.clientX;
+  };
+
+  const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (startX.current === null) return;
+    const delta = e.clientX - startX.current;
+    if (delta < 0) setDx(Math.max(-SWIPE, delta));
+    else setDx(0);
+  };
+
+  const onPointerUp = () => {
+    startX.current = null;
+    setDx(dx < -SWIPE / 2 ? -SWIPE : 0);
+  };
+
+  const handleEdit = () => {
+    setDx(0);
+    openSheet(tx);
+  };
+
+  const handleDelete = async () => {
+    await softDeleteTx(tx.id);
+    toast('Deleted', 'success');
+  };
+
+  return (
+    <div className="tx-row-wrap" data-testid="tx-row">
+      <div className="tx-row-actions">
+        <button type="button" className="tx-action edit" onClick={handleEdit} aria-label="Edit">
+          <Pencil size={16} />
+        </button>
+        <button
+          type="button"
+          className="tx-action del"
+          onClick={() => void handleDelete()}
+          aria-label="Delete"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+
+      <div
+        className="tx-row"
+        style={{ transform: `translateX(${dx}px)` }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        onClick={() => {
+          if (dx === 0) handleEdit();
+          else setDx(0);
+        }}
+      >
+        <div
+          className="tx-row-icon"
+          style={{ backgroundColor: `${cat.color}26`, color: cat.color }}
+        >
+          {Icon && <Icon size={18} />}
+        </div>
+        <div className="tx-row-body">
+          <div className="tx-row-name">{cat.name}</div>
+          {tx.note && <div className="tx-row-note">{tx.note}</div>}
+        </div>
+        <div className="tx-row-right">
+          <div className={isIncome ? 'tx-row-amt income' : 'tx-row-amt expense'}>
+            {isIncome ? '+' : '-'}
+            {formatMoney(tx.amountMinor, currency)}
+          </div>
+          <div className="tx-row-date">{formatDayLabel(tx.date)}</div>
+        </div>
+      </div>
+    </div>
+  );
+}

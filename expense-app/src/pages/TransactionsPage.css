@@ -1,0 +1,19 @@
+.tx-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 24px;
+}
+
+.tx-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-600);
+}
+
+.tx-summary-dot {
+  color: var(--ink-400);
+}

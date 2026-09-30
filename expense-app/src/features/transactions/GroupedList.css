@@ -1,0 +1,44 @@
+.grouped-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+}
+
+.group-header {
+  position: sticky;
+  top: 56px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0 6px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+.group-day {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--ink-400);
+}
+
+.group-total {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-900);
+  font-variant-numeric: tabular-nums;
+}
+
+.group-body {
+  display: flex;
+  flex-direction: column;
+}

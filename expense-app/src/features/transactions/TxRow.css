@@ -1,0 +1,106 @@
+.tx-row-wrap {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+
+.tx-row-wrap:last-child {
+  border-bottom: none;
+}
+
+.tx-row-actions {
+  position: absolute;
+  inset: 0 0 0 auto;
+  display: flex;
+  align-items: stretch;
+  width: 88px;
+}
+
+.tx-action {
+  flex: 1;
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.tx-action.edit {
+  background: var(--amber-500);
+}
+
+.tx-action.del {
+  background: var(--red-500);
+}
+
+.tx-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  background: white;
+  transition: transform 0.18s ease;
+  touch-action: pan-y;
+}
+
+.tx-row-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tx-row-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.tx-row-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tx-row-note {
+  font-size: 11.5px;
+  color: var(--ink-400);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tx-row-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.tx-row-amt {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.tx-row-amt.income {
+  color: var(--green-500);
+}
+
+.tx-row-amt.expense {
+  color: var(--ink-900);
+}
+
+.tx-row-date {
+  font-size: 11.5px;
+  color: var(--ink-400);
+  margin-top: 2px;
+}
