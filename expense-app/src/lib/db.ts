@@ -8,20 +8,39 @@ import type {
 } from './types';
 import { DEFAULT_CATEGORIES } from './categories';
 import { monthRange, todayLocal } from './format';
+import { requestSync, type SyncKind, type SyncOp } from './dbWrite';
 
-export class AppDB extends Dexie {
+export interface SyncQueueRow {
+  id?: number;
+  kind: SyncKind;
+  refId: string;
+  op: SyncOp;
+  queuedAt: number;
+}
+
+class AppDB extends Dexie {
   transactions!: Table<Transaction, string>;
   categories!: Table<Category, string>;
   settings!: Table<AppSettings, string>;
   meta!: Table<{ key: string; value: string }, string>;
+  syncQueue!: Table<SyncQueueRow, number>;
 
   constructor() {
     super('expense-app');
+
     this.version(1).stores({
       transactions: 'id, date, categoryId, type, updatedAt',
       categories: 'id, type',
       settings: 'id',
       meta: 'key',
+    });
+
+    this.version(2).stores({
+      transactions: 'id, date, categoryId, type, updatedAt',
+      categories: 'id, type',
+      settings: 'id',
+      meta: 'key',
+      syncQueue: '++id, kind, refId, queuedAt',
     });
   }
 }
@@ -34,18 +53,31 @@ const DEFAULT_SETTINGS: AppSettings = {
   locale: 'en-IN',
   monthStartDay: 1,
   autoBackup: false,
+  backupIntervalMin: 30,
 };
+
+async function enqueue(
+  kind: SyncKind,
+  refId: string,
+  op: SyncOp
+): Promise<void> {
+  await db.syncQueue.add({ kind, refId, op, queuedAt: Date.now() });
+  requestSync();
+}
 
 export async function seedIfEmpty(): Promise<void> {
   if ((await db.categories.count()) === 0) {
     await db.categories.bulkPut(DEFAULT_CATEGORIES);
   }
+
   if ((await db.settings.get('app')) === undefined) {
-    await db.settings.put({ ...DEFAULT_SETTINGS });
+    await db.settings.put(DEFAULT_SETTINGS);
   }
 }
 
-export async function createTx(partial: Partial<Transaction>): Promise<Transaction> {
+export async function createTx(
+  partial: Partial<Transaction>
+): Promise<Transaction> {
   const now = Date.now();
   const tx: Transaction = {
     id: crypto.randomUUID(),
@@ -58,12 +90,22 @@ export async function createTx(partial: Partial<Transaction>): Promise<Transacti
     updatedAt: now,
     deleted: 0,
   };
+
   await db.transactions.put(tx);
+  await enqueue('transaction', tx.id, 'upsert');
+
   return tx;
 }
 
-export async function updateTx(id: string, patch: Partial<Transaction>): Promise<void> {
-  await db.transactions.update(id, { ...patch, updatedAt: Date.now() });
+export async function updateTx(
+  id: string,
+  patch: Partial<Transaction>
+): Promise<void> {
+  await db.transactions.update(id, {
+    ...patch,
+    updatedAt: Date.now(),
+  });
+  await enqueue('transaction', id, 'upsert');
 }
 
 export async function softDeleteTx(id: string): Promise<void> {
@@ -76,41 +118,52 @@ export async function getTxsForMonth(key: string): Promise<Transaction[]> {
     .where('date')
     .between(start, end, true, true)
     .toArray();
+
   return rows
-    .filter((t) => t.deleted !== 1)
-    .sort((a, b) => {
-      if (a.date !== b.date) return a.date < b.date ? 1 : -1;
-      return b.updatedAt - a.updatedAt;
-    });
+    .filter((tx) => !tx.deleted)
+    .sort(
+      (a, b) =>
+        b.date.localeCompare(a.date) ||
+        b.updatedAt - a.updatedAt
+    );
 }
 
-export async function getSummaryForMonth(key: string): Promise<MonthlySummary> {
+export async function getSummaryForMonth(
+  key: string
+): Promise<MonthlySummary> {
   const txs = await getTxsForMonth(key);
+
   let incomeMinor = 0;
   let expenseMinor = 0;
-  const catTotals = new Map<string, number>();
-  const dayTotals = new Map<string, number>();
+  const categoryTotals = new Map<string, number>();
+  const dailyTotals = new Map<string, number>();
 
-  for (const t of txs) {
-    if (!dayTotals.has(t.date)) dayTotals.set(t.date, 0);
-    if (t.type === 'income') {
-      incomeMinor += t.amountMinor;
-    } else {
-      expenseMinor += t.amountMinor;
-      catTotals.set(t.categoryId, (catTotals.get(t.categoryId) ?? 0) + t.amountMinor);
-      dayTotals.set(t.date, (dayTotals.get(t.date) ?? 0) + t.amountMinor);
+  for (const tx of txs) {
+    if (tx.type === 'income') {
+      incomeMinor += tx.amountMinor;
+      continue;
     }
+
+    expenseMinor += tx.amountMinor;
+    categoryTotals.set(
+      tx.categoryId,
+      (categoryTotals.get(tx.categoryId) ?? 0) + tx.amountMinor
+    );
+    dailyTotals.set(
+      tx.date,
+      (dailyTotals.get(tx.date) ?? 0) + tx.amountMinor
+    );
   }
 
-  const byCategory = Array.from(catTotals, ([categoryId, totalMinor]) => ({
-    categoryId,
-    totalMinor,
-  })).sort((a, b) => b.totalMinor - a.totalMinor);
+  const byCategory = Array.from(
+    categoryTotals,
+    ([categoryId, totalMinor]) => ({ categoryId, totalMinor })
+  ).sort((a, b) => b.totalMinor - a.totalMinor);
 
-  const daily = Array.from(dayTotals, ([date, exp]) => ({
-    date,
-    expenseMinor: exp,
-  })).sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  const daily = Array.from(
+    dailyTotals,
+    ([date, total]) => ({ date, expenseMinor: total })
+  ).sort((a, b) => a.date.localeCompare(b.date));
 
   return {
     incomeMinor,
@@ -130,37 +183,61 @@ export async function getAllCategories(): Promise<Category[]> {
 }
 
 export async function getSettings(): Promise<AppSettings> {
-  const existing = await db.settings.get('app');
-  if (existing) return existing;
-  const fresh: AppSettings = { ...DEFAULT_SETTINGS };
-  await db.settings.put(fresh);
-  return fresh;
+  const settings = await db.settings.get('app');
+
+  if (!settings) {
+    await db.settings.put(DEFAULT_SETTINGS);
+    return DEFAULT_SETTINGS;
+  }
+
+  return settings;
 }
 
-export async function saveSettings(patch: Partial<AppSettings>): Promise<void> {
+export async function saveSettings(
+  patch: Partial<AppSettings>
+): Promise<void> {
   const current = await getSettings();
   await db.settings.put({ ...current, ...patch, id: 'app' });
 }
 
+export async function putCategory(c: Category): Promise<void> {
+  await db.categories.put(c);
+  await enqueue('category', c.id, 'upsert');
+}
+
+export async function updateCategory(
+  id: string,
+  patch: Partial<Category>
+): Promise<void> {
+  await db.categories.update(id, patch);
+  await enqueue('category', id, 'upsert');
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  await db.categories.delete(id);
+  await enqueue('category', id, 'delete');
+}
+
 export async function importAll(payload: BackupPayload): Promise<void> {
-  await db.transaction('rw', db.transactions, db.categories, db.settings, async () => {
-    await db.transactions.bulkPut(payload.transactions);
-    await db.categories.bulkPut(payload.categories);
-    await db.settings.put(payload.settings);
-  });
+  await db.transaction(
+    'rw',
+    db.transactions,
+    db.categories,
+    db.settings,
+    async () => {
+      await db.transactions.bulkPut(payload.transactions);
+      await db.categories.bulkPut(payload.categories);
+      await db.settings.put(payload.settings);
+    }
+  );
 }
 
 export async function exportAll(): Promise<BackupPayload> {
-  const [transactions, categories, settings] = await Promise.all([
-    getAllTxs(),
-    getAllCategories(),
-    getSettings(),
-  ]);
   return {
     version: 1,
     exportedAt: Date.now(),
-    transactions,
-    categories,
-    settings,
+    transactions: await db.transactions.toArray(),
+    categories: await db.categories.toArray(),
+    settings: await getSettings(),
   };
 }

@@ -29,6 +29,7 @@ export interface AppSettings {
   autoBackup: boolean;
   lastBackupAt?: number; // epoch ms
   supabaseUrl?: string;
+  backupIntervalMin: number; 
   supabaseKey?: string;
 }
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Sheet from '../../components/ui/Sheet';
 import Button from '../../components/ui/Button';
 import { toast } from '../../components/ui/Toast';
-import { db } from '../../lib/db';
+import { updateCategory } from '../../lib/db';
 import { parseMoneyToMinor } from '../../lib/format';
 import { getCategory } from '../../lib/categories';
 import type { Category } from '../../lib/types';
@@ -14,21 +14,30 @@ export interface BudgetEditorProps {
   onClose: () => void;
 }
 
-export default function BudgetEditor({ open, category, onClose }: BudgetEditorProps) {
+export default function BudgetEditor({
+  open,
+  category,
+  onClose,
+}: BudgetEditorProps) {
   const [amountStr, setAmountStr] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!open) return;
-    setAmountStr(category?.budgetMinor ? (category.budgetMinor / 100).toString() : '');
+    setAmountStr(
+      category?.budgetMinor ? (category.budgetMinor / 100).toString() : ''
+    );
   }, [open, category]);
 
   const handleSave = async () => {
     if (!category) return;
     const minor = parseMoneyToMinor(amountStr);
     setSaving(true);
+
     try {
-      await db.categories.update(category.id, { budgetMinor: minor || undefined });
+      await updateCategory(category.id, {
+        budgetMinor: minor || undefined,
+      });
       toast('Budget saved', 'success');
       onClose();
     } catch {
@@ -41,8 +50,9 @@ export default function BudgetEditor({ open, category, onClose }: BudgetEditorPr
   const handleDelete = async () => {
     if (!category) return;
     setSaving(true);
+
     try {
-      await db.categories.update(category.id, { budgetMinor: undefined });
+      await updateCategory(category.id, { budgetMinor: undefined });
       toast('Budget removed', 'success');
       onClose();
     } finally {
@@ -65,7 +75,7 @@ export default function BudgetEditor({ open, category, onClose }: BudgetEditorPr
             inputMode="decimal"
             placeholder="0"
             value={amountStr}
-            onChange={(e) => setAmountStr(e.target.value)}
+            onChange={(event) => setAmountStr(event.target.value)}
             autoFocus
           />
         </label>

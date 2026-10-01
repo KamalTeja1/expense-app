@@ -39,7 +39,14 @@ import {
 import { Modal } from '../../components/ui/Sheet';
 import Button from '../../components/ui/Button';
 import { toast } from '../../components/ui/Toast';
-import { db, getAllCategories, getAllTxs } from '../../lib/db';
+import {
+  db,
+  putCategory,
+  updateCategory,
+  deleteCategory,
+  getAllCategories,
+  getAllTxs,
+} from '../../lib/db';
 import { CATEGORY_COLORS } from '../../lib/categories';
 import type { Category, TxType } from '../../lib/types';
 import './CategoryManager.css';
@@ -84,7 +91,7 @@ const ICON_CHOICES: { name: string; Icon: LucideIcon }[] = [
 ];
 
 function iconFor(name: string): LucideIcon {
-  return ICON_CHOICES.find((i) => i.name === name)?.Icon ?? MoreHorizontal;
+  return ICON_CHOICES.find((item) => item.name === name)?.Icon ?? MoreHorizontal;
 }
 
 export default function CategoryManager({ open, onClose }: CategoryManagerProps) {
@@ -115,24 +122,26 @@ export default function CategoryManager({ open, onClose }: CategoryManagerProps)
   }, [editing, formOpen]);
 
   const usage = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const t of txs) {
-      m.set(t.categoryId, (m.get(t.categoryId) ?? 0) + 1);
+    const map = new Map<string, number>();
+    for (const tx of txs) {
+      map.set(tx.categoryId, (map.get(tx.categoryId) ?? 0) + 1);
     }
-    return m;
+    return map;
   }, [txs]);
 
-  const expense = categories.filter((c) => c.type === 'expense');
-  const income = categories.filter((c) => c.type === 'income');
+  const expense = categories.filter((category) => category.type === 'expense');
+  const income = categories.filter((category) => category.type === 'income');
 
   const openAdd = () => {
     setEditing(null);
     setFormOpen(true);
   };
-  const openEdit = (c: Category) => {
-    setEditing(c);
+
+  const openEdit = (category: Category) => {
+    setEditing(category);
     setFormOpen(true);
   };
+
   const closeForm = () => {
     setFormOpen(false);
     setEditing(null);
@@ -141,56 +150,90 @@ export default function CategoryManager({ open, onClose }: CategoryManagerProps)
   const handleSave = async () => {
     const trimmed = name.trim();
     if (!trimmed) return;
+
     if (editing) {
-      await db.categories.update(editing.id, { name: trimmed, icon, color, type });
+      await updateCategory(editing.id, {
+        name: trimmed,
+        icon,
+        color,
+        type,
+      });
       toast('Category updated', 'success');
     } else {
       const id =
         trimmed.toLowerCase().replace(/[^a-z0-9]+/g, '-') +
         '-' +
         Date.now().toString(36);
-      await db.categories.put({ id, name: trimmed, icon, color, type });
+
+      await putCategory({
+        id,
+        name: trimmed,
+        icon,
+        color,
+        type,
+      });
       toast('Category added', 'success');
     }
+
     closeForm();
   };
 
   const handleDeleteConfirmed = async () => {
     if (!confirmingDelete) return;
+
     const fallbackId =
       confirmingDelete.type === 'expense' ? 'other-expense' : 'other-income';
-    const toReassign = txs.filter((t) => t.categoryId === confirmingDelete.id);
+
+    const toReassign = txs.filter(
+      (tx) => tx.categoryId === confirmingDelete.id
+    );
+
     if (toReassign.length > 0) {
       await Promise.all(
-        toReassign.map((t) => db.transactions.update(t.id, { categoryId: fallbackId }))
+        toReassign.map((tx) =>
+          db.transactions.update(tx.id, { categoryId: fallbackId })
+        )
       );
     }
-    await db.categories.delete(confirmingDelete.id);
+
+    await deleteCategory(confirmingDelete.id);
     toast('Category deleted', 'success');
     setConfirmingDelete(null);
   };
 
-  const renderRow = (c: Category) => {
-    const Icon = iconFor(c.icon);
-    const used = usage.get(c.id) ?? 0;
+  const renderRow = (category: Category) => {
+    const Icon = iconFor(category.icon);
+    const used = usage.get(category.id) ?? 0;
+
     return (
-      <li key={c.id} className="cm-row">
-        <span className="cm-icon" style={{ backgroundColor: `${c.color}26`, color: c.color }}>
+      <li key={category.id} className="cm-row">
+        <span
+          className="cm-icon"
+          style={{
+            backgroundColor: `${category.color}26`,
+            color: category.color,
+          }}
+        >
           <Icon size={18} />
         </span>
         <div className="cm-row-body">
-          <div className="cm-row-name">{c.name}</div>
+          <div className="cm-row-name">{category.name}</div>
           <div className="cm-row-meta">
             {used} {used === 1 ? 'transaction' : 'transactions'}
           </div>
         </div>
-        <button type="button" className="cm-row-btn" onClick={() => openEdit(c)} aria-label="Edit">
+        <button
+          type="button"
+          className="cm-row-btn"
+          onClick={() => openEdit(category)}
+          aria-label="Edit"
+        >
           <Pencil size={16} />
         </button>
         <button
           type="button"
           className="cm-row-btn danger"
-          onClick={() => setConfirmingDelete(c)}
+          onClick={() => setConfirmingDelete(category)}
           aria-label="Delete"
         >
           <Trash2 size={16} />
@@ -204,8 +247,8 @@ export default function CategoryManager({ open, onClose }: CategoryManagerProps)
       <div className="cm-root">
         <div className="cm-toolbar">
           <p className="cm-hint">
-            Add, edit, or remove categories. Deleted categories reassign their transactions to
-            "Other".
+            Add, edit, or remove categories. Deleted categories reassign their
+            transactions to "Other".
           </p>
           <Button variant="primary" size="sm" leftIcon={<Plus size={16} />} onClick={openAdd}>
             Add category
@@ -229,8 +272,15 @@ export default function CategoryManager({ open, onClose }: CategoryManagerProps)
         {formOpen && (
           <div className="cm-form">
             <div className="cm-form-head">
-              <h3 className="cm-form-title">{editing ? 'Edit category' : 'New category'}</h3>
-              <button type="button" className="cm-form-close" onClick={closeForm} aria-label="Cancel">
+              <h3 className="cm-form-title">
+                {editing ? 'Edit category' : 'New category'}
+              </h3>
+              <button
+                type="button"
+                className="cm-form-close"
+                onClick={closeForm}
+                aria-label="Cancel"
+              >
                 <X size={18} />
               </button>
             </div>
@@ -259,7 +309,7 @@ export default function CategoryManager({ open, onClose }: CategoryManagerProps)
                 type="text"
                 value={name}
                 maxLength={24}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(event) => setName(event.target.value)}
                 placeholder="e.g. Coffee"
                 autoFocus
               />
@@ -268,14 +318,14 @@ export default function CategoryManager({ open, onClose }: CategoryManagerProps)
             <div className="cm-field">
               <span className="cm-field-label">Color</span>
               <div className="cm-swatches">
-                {CATEGORY_COLORS.map((c) => (
+                {CATEGORY_COLORS.map((choice) => (
                   <button
-                    key={c}
+                    key={choice}
                     type="button"
-                    className={clsx('cm-swatch', color === c && 'active')}
-                    style={{ background: c }}
-                    onClick={() => setColor(c)}
-                    aria-label={`Color ${c}`}
+                    className={clsx('cm-swatch', color === choice && 'active')}
+                    style={{ background: choice }}
+                    onClick={() => setColor(choice)}
+                    aria-label={`Color ${choice}`}
                   />
                 ))}
               </div>
@@ -284,13 +334,13 @@ export default function CategoryManager({ open, onClose }: CategoryManagerProps)
             <div className="cm-field">
               <span className="cm-field-label">Icon</span>
               <div className="cm-icons">
-                {ICON_CHOICES.map(({ name: n, Icon }) => (
+                {ICON_CHOICES.map(({ name: iconName, Icon }) => (
                   <button
-                    key={n}
+                    key={iconName}
                     type="button"
-                    className={clsx('cm-icon-btn', icon === n && 'active')}
-                    onClick={() => setIcon(n)}
-                    aria-label={n}
+                    className={clsx('cm-icon-btn', icon === iconName && 'active')}
+                    onClick={() => setIcon(iconName)}
+                    aria-label={iconName}
                   >
                     <Icon size={18} />
                   </button>
@@ -317,10 +367,12 @@ export default function CategoryManager({ open, onClose }: CategoryManagerProps)
         {confirmingDelete && (
           <div className="cm-confirm-backdrop">
             <div className="cm-confirm">
-              <h3 className="cm-confirm-title">Delete "{confirmingDelete.name}"?</h3>
+              <h3 className="cm-confirm-title">
+                Delete "{confirmingDelete.name}"?
+              </h3>
               <p className="cm-confirm-text">
-                Any transactions using this category will be moved to "Other". This cannot be
-                undone.
+                Any transactions using this category will be moved to "Other".
+                This cannot be undone.
               </p>
               <div className="cm-confirm-actions">
                 <Button variant="ghost" onClick={() => setConfirmingDelete(null)}>
