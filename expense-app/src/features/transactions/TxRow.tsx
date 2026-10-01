@@ -1,6 +1,7 @@
 import { useRef, useState, type PointerEvent } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
-import { ICON_MAP, getCategory } from '../../lib/categories';
+import { ICON_MAP } from '../../lib/categories';
+import { useCategoryMap } from '../../lib/useCategoryMap';
 import { formatMoney, formatDayLabel } from '../../lib/format';
 import { useAddTxBus } from '../../store/addTxBus';
 import { softDeleteTx } from '../../lib/db';
@@ -18,13 +19,14 @@ const SWIPE = 88;
 
 export default function TxRow({ tx, currency }: TxRowProps) {
   const openSheet = useAddTxBus((s) => s.openSheet);
+  const { get } = useCategoryMap();
   const [dx, setDx] = useState(0);
   const [ctxOpen, setCtxOpen] = useState(false);
   const startX = useRef<number | null>(null);
   const longPressTimer = useRef<number | null>(null);
   const movedRef = useRef(false);
 
-  const cat = getCategory(tx.categoryId);
+  const cat = get(tx.categoryId);
   const Icon = ICON_MAP[cat.icon];
   const isIncome = tx.type === 'income';
 
@@ -41,6 +43,7 @@ export default function TxRow({ tx, currency }: TxRowProps) {
   const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
     if (startX.current === null) return;
     const delta = e.clientX - startX.current;
+
     if (Math.abs(delta) > 6) {
       movedRef.current = true;
       if (longPressTimer.current) {
@@ -48,6 +51,7 @@ export default function TxRow({ tx, currency }: TxRowProps) {
         longPressTimer.current = null;
       }
     }
+
     if (delta < 0) setDx(Math.max(-SWIPE, delta));
     else setDx(0);
   };

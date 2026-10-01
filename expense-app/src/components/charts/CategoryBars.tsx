@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { formatMoney } from '../../lib/format';
-import { getCategory, ICON_MAP } from '../../lib/categories';
+import { ICON_MAP } from '../../lib/categories';
+import { useCategoryMap } from '../../lib/useCategoryMap';
 import './CategoryBars.css';
 
 export interface CategoryBarItem {
@@ -20,6 +21,7 @@ export default function CategoryBars({
   currency = 'INR',
 }: CategoryBarsProps) {
   const [mounted, setMounted] = useState(false);
+  const { get } = useCategoryMap();
 
   useEffect(() => {
     const t = requestAnimationFrame(() => setMounted(true));
@@ -33,10 +35,11 @@ export default function CategoryBars({
   return (
     <ul className="category-bars" data-testid="category-bars">
       {items.map((item) => {
-        const cat = getCategory(item.categoryId);
+        const cat = get(item.categoryId);
         const Icon = ICON_MAP[cat.icon] ?? ICON_MAP.MoreHorizontal;
         const pct =
           totalMinor > 0 ? Math.min(100, (item.totalMinor / totalMinor) * 100) : 0;
+
         return (
           <li key={item.categoryId} className="category-bar">
             <div

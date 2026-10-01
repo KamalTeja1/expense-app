@@ -1,6 +1,7 @@
 import { Pencil } from 'lucide-react';
 import clsx from 'clsx';
-import { ICON_MAP, getCategory } from '../../lib/categories';
+import { ICON_MAP } from '../../lib/categories';
+import { useCategoryMap } from '../../lib/useCategoryMap';
 import { formatMoney } from '../../lib/format';
 import type { Category } from '../../lib/types';
 import './BudgetCard.css';
@@ -18,11 +19,12 @@ export default function BudgetCard({
   currency,
   onEdit,
 }: BudgetCardProps) {
+  const { get } = useCategoryMap();
   const total = category.budgetMinor ?? 0;
   const pct = total > 0 ? usedMinor / total : 0;
   const over = pct > 1;
   const close = pct >= 0.8 && pct <= 1;
-  const cat = getCategory(category.id);
+  const cat = get(category.id);
   const Icon = ICON_MAP[cat.icon];
 
   const badgeTone = over ? 'red' : close ? 'amber' : 'green';

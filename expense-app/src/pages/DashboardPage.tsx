@@ -18,7 +18,8 @@ import {
   monthLabel,
   formatDayLabel,
 } from '../lib/format';
-import { getCategory, ICON_MAP } from '../lib/categories';
+import { ICON_MAP } from '../lib/categories';
+import { useCategoryMap } from '../lib/useCategoryMap';
 import { Card, CardHeader, CardBody } from '../components/ui/Card';
 import StatCard from '../components/ui/StatCard';
 import MonthPicker from '../components/ui/MonthPicker';
@@ -29,7 +30,6 @@ import TrendArea from '../components/charts/TrendArea';
 import CategoryBars from '../components/charts/CategoryBars';
 import MonthCompare from '../components/charts/MonthCompare';
 import './DashboardPage.css';
-import AnimatedNumber from '../components/ui/AnimatedNumber';
 
 function makeDelta(current: number, previous: number, prevLabel: string): string {
   if (previous === 0) return '';
@@ -39,10 +39,28 @@ function makeDelta(current: number, previous: number, prevLabel: string): string
   return `${sign}${pct}% vs ${short}`;
 }
 
+function DashboardSkeleton() {
+  return (
+    <div className="dashboard">
+      <Skeleton h={180} radius={16} />
+      <Skeleton h={64} radius={12} />
+      <div className="dashboard-stats">
+        <Skeleton h={96} radius={12} />
+        <Skeleton h={96} radius={12} />
+        <Skeleton h={96} radius={12} />
+        <Skeleton h={96} radius={12} />
+      </div>
+      <Skeleton h={280} radius={14} />
+      <Skeleton h={220} radius={14} />
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { monthKey, currency, ready, init } = useAppStore();
   const setMonthKey = useAppStore((s) => s.setMonthKey);
   const openSheet = useAddTxBus((s) => s.openSheet);
+  const { get: getCat } = useCategoryMap();
 
   useEffect(() => {
     void init();
@@ -86,7 +104,7 @@ export default function DashboardPage() {
 
   const byCategoryDonut =
     summary?.byCategory.map((b) => {
-      const cat = getCategory(b.categoryId);
+      const cat = getCat(b.categoryId);
       return { name: cat.name, value: b.totalMinor, color: cat.color };
     }) ?? [];
 
@@ -107,7 +125,7 @@ export default function DashboardPage() {
       <section className="hero">
         <div className="hero-blob" aria-hidden />
         <span className="hero-badge">{monthLabel(monthKey)}</span>
-        <h1 className="hero-net">  <AnimatedNumber value={summary?.netMinor ?? 0} currency={currency} /> </h1>
+        <h1 className="hero-net">{formatMoney(summary?.netMinor ?? 0, currency)}</h1>
         <div className="hero-split">
           <div className="hero-mini">
             <ArrowDownLeft size={16} className="hero-mini-icon" />
@@ -216,9 +234,10 @@ export default function DashboardPage() {
             <CardBody>
               <ul className="dashboard-recent">
                 {recent.map((tx) => {
-                  const cat = getCategory(tx.categoryId);
+                  const cat = getCat(tx.categoryId);
                   const Icon = ICON_MAP[cat.icon] ?? ICON_MAP.MoreHorizontal;
                   const isIncome = tx.type === 'income';
+
                   return (
                     <li key={tx.id} className="recent-row">
                       <div
@@ -257,23 +276,6 @@ export default function DashboardPage() {
       >
         <Plus size={24} />
       </button>
-    </div>
-  );
-}
-
-function DashboardSkeleton() {
-  return (
-    <div className="dashboard">
-      <Skeleton h={180} radius={16} />
-      <Skeleton h={64} radius={12} />
-      <div className="dashboard-stats">
-        <Skeleton h={96} radius={12} />
-        <Skeleton h={96} radius={12} />
-        <Skeleton h={96} radius={12} />
-        <Skeleton h={96} radius={12} />
-      </div>
-      <Skeleton h={280} radius={14} />
-      <Skeleton h={220} radius={14} />
     </div>
   );
 }
