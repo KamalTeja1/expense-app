@@ -109,8 +109,32 @@ export async function backupNow(): Promise<
       budget_minor: category.budgetMinor ?? null,
     }));
 
-    // A backup is a complete snapshot of local categories. Remove server
-    // categories missing from this snapshot, so Restore cannot resurrect them.
+    let total = 0;
+
+    // Create/update categories first so new transactions can safely reference them.
+    for (const rows of chunk(categories, 200)) {
+      const { error } = await supabase.from('categories').upsert(rows);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      total += rows.length;
+    }
+
+    // Upload transaction category reassignments before deleting stale categories.
+    for (const rows of chunk(transactions, 200)) {
+      const { error } = await supabase.from('transactions').upsert(rows);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      total += rows.length;
+    }
+
+    // A backup represents the complete local category list. Delete categories
+    // remaining on the server but absent locally, so Restore cannot resurrect them.
     const { data: remoteCategories, error: remoteCategoriesError } =
       await supabase
         .from('categories')
@@ -125,42 +149,29 @@ export async function backupNow(): Promise<
       categories.map((category) => category.id)
     );
 
-    const deletedCategoryIds = (remoteCategories ?? [])
+    const staleCategoryIds = (remoteCategories ?? [])
       .map((category) => category.id)
       .filter((id) => !localCategoryIds.has(id));
 
-    for (const ids of chunk(deletedCategoryIds, 200)) {
-      const { error } = await supabase
+    for (const ids of chunk(staleCategoryIds, 200)) {
+      const { data: deletedCategories, error } = await supabase
         .from('categories')
         .delete()
         .eq('user_id', userId)
-        .in('id', ids);
-
-      if (error) {
-        throw new Error(error.message);
-      }
-    }
-
-    let total = 0;
-
-    for (const rows of chunk(transactions, 200)) {
-      const { error } = await supabase.from('transactions').upsert(rows);
+        .in('id', ids)
+        .select('id');
 
       if (error) {
         throw new Error(error.message);
       }
 
-      total += rows.length;
-    }
-
-    for (const rows of chunk(categories, 200)) {
-      const { error } = await supabase.from('categories').upsert(rows);
-
-      if (error) {
-        throw new Error(error.message);
+      // With a missing RLS DELETE policy, Supabase can return success but delete
+      // zero rows. Detect that case instead of falsely reporting a successful backup.
+      if ((deletedCategories ?? []).length !== ids.length) {
+        throw new Error(
+          'Could not delete all removed categories. Check the Supabase DELETE policy for categories.'
+        );
       }
-
-      total += rows.length;
     }
 
     const at = Date.now();

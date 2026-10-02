@@ -52,6 +52,7 @@ export async function createTx(
   partial: Partial<Transaction>
 ): Promise<Transaction> {
   const now = Date.now();
+
   const tx: Transaction = {
     id: crypto.randomUUID(),
     type: partial.type ?? 'expense',
@@ -85,6 +86,7 @@ export async function softDeleteTx(id: string): Promise<void> {
 
 export async function getTxsForMonth(key: string): Promise<Transaction[]> {
   const { start, end } = monthRange(key);
+
   const rows = await db.transactions
     .where('date')
     .between(start, end, true, true)
@@ -116,10 +118,12 @@ export async function getSummaryForMonth(
     }
 
     expenseMinor += tx.amountMinor;
+
     categoryTotals.set(
       tx.categoryId,
       (categoryTotals.get(tx.categoryId) ?? 0) + tx.amountMinor
     );
+
     dailyTotals.set(
       tx.date,
       (dailyTotals.get(tx.date) ?? 0) + tx.amountMinor
@@ -178,6 +182,11 @@ export async function importAll(payload: BackupPayload): Promise<void> {
     db.categories,
     db.settings,
     async () => {
+      // Restore is server-authoritative: replace local records rather than
+      // merging them, including records the server no longer contains.
+      await db.transactions.clear();
+      await db.categories.clear();
+
       await db.transactions.bulkPut(payload.transactions);
       await db.categories.bulkPut(payload.categories);
       await db.settings.put(payload.settings);
