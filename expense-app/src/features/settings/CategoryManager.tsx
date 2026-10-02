@@ -118,13 +118,19 @@ export default function CategoryManager({ open, onClose }: CategoryManagerProps)
     }
   }, [editing, formOpen]);
 
-  const usage = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const tx of txs) {
-      map.set(tx.categoryId, (map.get(tx.categoryId) ?? 0) + 1);
-    }
-    return map;
-  }, [txs]);
+const usage = useMemo(() => {
+  const map = new Map<string, number>();
+
+  for (const tx of txs) {
+    // Deleted transactions remain in IndexedDB for backup/history,
+    // but must not count as active category usage.
+    if (tx.deleted) continue;
+
+    map.set(tx.categoryId, (map.get(tx.categoryId) ?? 0) + 1);
+  }
+
+  return map;
+}, [txs]);
 
   const expense = categories.filter((category) => category.type === 'expense');
   const income = categories.filter((category) => category.type === 'income');
