@@ -33,9 +33,11 @@ type CatRowRemote = {
 
 function chunk<T>(arr: T[], size: number): T[][] {
   const out: T[][] = [];
+
   for (let index = 0; index < arr.length; index += size) {
     out.push(arr.slice(index, index + size));
   }
+
   return out;
 }
 
@@ -51,12 +53,15 @@ export async function getCurrentUserId(): Promise<string | null> {
   return data.user?.id ?? null;
 }
 
-export async function testConnection(): Promise<Result<{ email: string | null }>> {
+export async function testConnection(): Promise<
+  Result<{ email: string | null }>
+> {
   const supabase = getSupabase();
   if (!supabase) return { ok: false, error: 'Supabase not configured' };
 
   const { data } = await supabase.auth.getUser();
   const user = data.user;
+
   if (!user) return { ok: false, error: 'Not signed in' };
 
   const { error } = await supabase
@@ -69,7 +74,9 @@ export async function testConnection(): Promise<Result<{ email: string | null }>
   return { ok: true, data: { email: user.email ?? null } };
 }
 
-export async function backupNow(): Promise<Result<{ pushed: number; at: number }>> {
+export async function backupNow(): Promise<
+  Result<{ pushed: number; at: number }>
+> {
   const supabase = getSupabase();
   if (!supabase) return { ok: false, error: 'Supabase not configured' };
 
@@ -79,40 +86,80 @@ export async function backupNow(): Promise<Result<{ pushed: number; at: number }
   try {
     const payload = await exportAll();
 
-const transactions: TxRowRemote[] = payload.transactions.map((tx) => ({
-  id: tx.id,
-  user_id: userId,
-  type: tx.type,
-  amount_minor: tx.amountMinor,
-  category_id: tx.categoryId,
-  date: tx.date,
-  note: tx.note ?? null,
-  created_at: tx.createdAt,
-  updated_at: tx.updatedAt,
-  deleted: tx.deleted ?? null,
-}));
+    const transactions: TxRowRemote[] = payload.transactions.map((tx) => ({
+      id: tx.id,
+      user_id: userId,
+      type: tx.type,
+      amount_minor: tx.amountMinor,
+      category_id: tx.categoryId,
+      date: tx.date,
+      note: tx.note ?? null,
+      created_at: tx.createdAt,
+      updated_at: tx.updatedAt,
+      deleted: tx.deleted ?? null,
+    }));
 
-const categories: CatRowRemote[] = payload.categories.map((category) => ({
-  id: category.id,
-  user_id: userId,
-  name: category.name,
-  icon: category.icon,
-  color: category.color,
-  type: category.type,
-  budget_minor: category.budgetMinor ?? null,
-}));
+    const categories: CatRowRemote[] = payload.categories.map((category) => ({
+      id: category.id,
+      user_id: userId,
+      name: category.name,
+      icon: category.icon,
+      color: category.color,
+      type: category.type,
+      budget_minor: category.budgetMinor ?? null,
+    }));
+
+    // A backup is a complete snapshot of local categories. Remove server
+    // categories missing from this snapshot, so Restore cannot resurrect them.
+    const { data: remoteCategories, error: remoteCategoriesError } =
+      await supabase
+        .from('categories')
+        .select('id')
+        .eq('user_id', userId);
+
+    if (remoteCategoriesError) {
+      throw new Error(remoteCategoriesError.message);
+    }
+
+    const localCategoryIds = new Set(
+      categories.map((category) => category.id)
+    );
+
+    const deletedCategoryIds = (remoteCategories ?? [])
+      .map((category) => category.id)
+      .filter((id) => !localCategoryIds.has(id));
+
+    for (const ids of chunk(deletedCategoryIds, 200)) {
+      const { error } = await supabase
+        .from('categories')
+        .delete()
+        .eq('user_id', userId)
+        .in('id', ids);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+    }
 
     let total = 0;
 
     for (const rows of chunk(transactions, 200)) {
       const { error } = await supabase.from('transactions').upsert(rows);
-      if (error) throw new Error(error.message);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
       total += rows.length;
     }
 
     for (const rows of chunk(categories, 200)) {
       const { error } = await supabase.from('categories').upsert(rows);
-      if (error) throw new Error(error.message);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
       total += rows.length;
     }
 
@@ -151,32 +198,32 @@ export async function restoreNow(): Promise<Result<{ pulled: number }>> {
       throw new Error(categoriesResult.error.message);
     }
 
-const transactions: Transaction[] = (
-  (transactionsResult.data ?? []) as TxRowRemote[]
-).map((row) => ({
-  id: row.id,
-  type: row.type,
-  amountMinor: row.amount_minor,
-  categoryId: row.category_id,
-  date: row.date,
-  ...(row.note === null ? {} : { note: row.note }),
-  createdAt: row.created_at,
-  updatedAt: row.updated_at,
-  ...(row.deleted === null ? {} : { deleted: row.deleted }),
-}));
+    const transactions: Transaction[] = (
+      (transactionsResult.data ?? []) as TxRowRemote[]
+    ).map((row) => ({
+      id: row.id,
+      type: row.type,
+      amountMinor: row.amount_minor,
+      categoryId: row.category_id,
+      date: row.date,
+      ...(row.note === null ? {} : { note: row.note }),
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      ...(row.deleted === null ? {} : { deleted: row.deleted }),
+    }));
 
-const categories: Category[] = (
-  (categoriesResult.data ?? []) as CatRowRemote[]
-).map((row) => ({
-  id: row.id,
-  name: row.name,
-  icon: row.icon,
-  color: row.color,
-  type: row.type,
-  ...(row.budget_minor === null
-    ? {}
-    : { budgetMinor: row.budget_minor }),
-}));
+    const categories: Category[] = (
+      (categoriesResult.data ?? []) as CatRowRemote[]
+    ).map((row) => ({
+      id: row.id,
+      name: row.name,
+      icon: row.icon,
+      color: row.color,
+      type: row.type,
+      ...(row.budget_minor === null
+        ? {}
+        : { budgetMinor: row.budget_minor }),
+    }));
 
     const settings = await getSettings();
 
@@ -190,7 +237,6 @@ const categories: Category[] = (
 
     await importAll(payload);
 
-    // Server is now authoritative; clear the queue.
     return {
       ok: true,
       data: { pulled: transactions.length + categories.length },
