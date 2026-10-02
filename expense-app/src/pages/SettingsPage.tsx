@@ -8,15 +8,12 @@ import BackupPanel from '../features/settings/BackupPanel';
 import DataPanel from '../features/settings/DataPanel';
 import PreferencesPanel from '../features/settings/PreferencesPanel';
 import { useAuth } from '../store/useAuth';
-import { useAutoBackup } from '../lib/useAutoBackup';
 import './SettingsPage.css';
 
 export default function SettingsPage() {
   const [catOpen, setCatOpen] = useState(false);
   const user = useAuth((s) => s.user);
   const signOut = useAuth((s) => s.signOut);
-
-  useAutoBackup();
 
   const handleSignOut = async () => {
     const confirmed = window.confirm(

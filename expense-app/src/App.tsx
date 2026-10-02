@@ -15,7 +15,6 @@ export default function App() {
   const initializing = useAuth((s) => s.initializing);
 
   const initApp = useAppStore((s) => s.init);
-
   useEffect(() => {
     initAuth();
   }, [initAuth]);

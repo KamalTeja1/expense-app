@@ -8,22 +8,12 @@ import type {
 } from './types';
 import { DEFAULT_CATEGORIES } from './categories';
 import { monthRange, todayLocal } from './format';
-import { requestSync, type SyncKind, type SyncOp } from './dbWrite';
-
-export interface SyncQueueRow {
-  id?: number;
-  kind: SyncKind;
-  refId: string;
-  op: SyncOp;
-  queuedAt: number;
-}
 
 class AppDB extends Dexie {
   transactions!: Table<Transaction, string>;
   categories!: Table<Category, string>;
   settings!: Table<AppSettings, string>;
   meta!: Table<{ key: string; value: string }, string>;
-  syncQueue!: Table<SyncQueueRow, number>;
 
   constructor() {
     super('expense-app');
@@ -33,14 +23,6 @@ class AppDB extends Dexie {
       categories: 'id, type',
       settings: 'id',
       meta: 'key',
-    });
-
-    this.version(2).stores({
-      transactions: 'id, date, categoryId, type, updatedAt',
-      categories: 'id, type',
-      settings: 'id',
-      meta: 'key',
-      syncQueue: '++id, kind, refId, queuedAt',
     });
   }
 }
@@ -55,15 +37,6 @@ const DEFAULT_SETTINGS: AppSettings = {
   autoBackup: false,
   backupIntervalMin: 30,
 };
-
-async function enqueue(
-  kind: SyncKind,
-  refId: string,
-  op: SyncOp
-): Promise<void> {
-  await db.syncQueue.add({ kind, refId, op, queuedAt: Date.now() });
-  requestSync();
-}
 
 export async function seedIfEmpty(): Promise<void> {
   if ((await db.categories.count()) === 0) {
@@ -92,7 +65,6 @@ export async function createTx(
   };
 
   await db.transactions.put(tx);
-  await enqueue('transaction', tx.id, 'upsert');
 
   return tx;
 }
@@ -105,7 +77,6 @@ export async function updateTx(
     ...patch,
     updatedAt: Date.now(),
   });
-  await enqueue('transaction', id, 'upsert');
 }
 
 export async function softDeleteTx(id: string): Promise<void> {
@@ -198,24 +169,6 @@ export async function saveSettings(
 ): Promise<void> {
   const current = await getSettings();
   await db.settings.put({ ...current, ...patch, id: 'app' });
-}
-
-export async function putCategory(c: Category): Promise<void> {
-  await db.categories.put(c);
-  await enqueue('category', c.id, 'upsert');
-}
-
-export async function updateCategory(
-  id: string,
-  patch: Partial<Category>
-): Promise<void> {
-  await db.categories.update(id, patch);
-  await enqueue('category', id, 'upsert');
-}
-
-export async function deleteCategory(id: string): Promise<void> {
-  await db.categories.delete(id);
-  await enqueue('category', id, 'delete');
 }
 
 export async function importAll(payload: BackupPayload): Promise<void> {

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Sheet from '../../components/ui/Sheet';
 import Button from '../../components/ui/Button';
 import { toast } from '../../components/ui/Toast';
-import { updateCategory } from '../../lib/db';
+import { db } from '../../lib/db';
 import { parseMoneyToMinor } from '../../lib/format';
 import { getCategory } from '../../lib/categories';
 import type { Category } from '../../lib/types';
@@ -35,7 +35,7 @@ export default function BudgetEditor({
     setSaving(true);
 
     try {
-      await updateCategory(category.id, {
+      await db.categories.update(category.id, {
         budgetMinor: minor || undefined,
       });
       toast('Budget saved', 'success');
@@ -52,7 +52,7 @@ export default function BudgetEditor({
     setSaving(true);
 
     try {
-      await updateCategory(category.id, { budgetMinor: undefined });
+      await db.categories.update(category.id, { budgetMinor: undefined });
       toast('Budget removed', 'success');
       onClose();
     } finally {

@@ -1,9 +1,35 @@
 import { getSupabase } from './supabase';
-import { db, exportAll, importAll, getSettings, saveSettings } from './db';
-import type { BackupPayload, Category, Result, Transaction } from './types';
+import { exportAll, importAll, getSettings, saveSettings } from './db';
+import type {
+  BackupPayload,
+  Category,
+  Result,
+  Transaction,
+  TxType,
+} from './types';
 
-type TxRowRemote = Transaction & { user_id: string };
-type CatRowRemote = Category & { user_id: string };
+type TxRowRemote = {
+  id: string;
+  user_id: string;
+  type: TxType;
+  amount_minor: number;
+  category_id: string;
+  date: string;
+  note: string | null;
+  created_at: number;
+  updated_at: number;
+  deleted: 0 | 1 | null;
+};
+
+type CatRowRemote = {
+  id: string;
+  user_id: string;
+  name: string;
+  icon: string;
+  color: string;
+  type: TxType;
+  budget_minor: number | null;
+};
 
 function chunk<T>(arr: T[], size: number): T[][] {
   const out: T[][] = [];
@@ -53,15 +79,28 @@ export async function backupNow(): Promise<Result<{ pushed: number; at: number }
   try {
     const payload = await exportAll();
 
-    const transactions: TxRowRemote[] = payload.transactions.map((tx) => ({
-      ...tx,
-      user_id: userId,
-    }));
+const transactions: TxRowRemote[] = payload.transactions.map((tx) => ({
+  id: tx.id,
+  user_id: userId,
+  type: tx.type,
+  amount_minor: tx.amountMinor,
+  category_id: tx.categoryId,
+  date: tx.date,
+  note: tx.note ?? null,
+  created_at: tx.createdAt,
+  updated_at: tx.updatedAt,
+  deleted: tx.deleted ?? null,
+}));
 
-    const categories: CatRowRemote[] = payload.categories.map((category) => ({
-      ...category,
-      user_id: userId,
-    }));
+const categories: CatRowRemote[] = payload.categories.map((category) => ({
+  id: category.id,
+  user_id: userId,
+  name: category.name,
+  icon: category.icon,
+  color: category.color,
+  type: category.type,
+  budget_minor: category.budgetMinor ?? null,
+}));
 
     let total = 0;
 
@@ -112,13 +151,32 @@ export async function restoreNow(): Promise<Result<{ pulled: number }>> {
       throw new Error(categoriesResult.error.message);
     }
 
-    const transactions: Transaction[] = (
-      (transactionsResult.data ?? []) as TxRowRemote[]
-    ).map(({ user_id: _userId, ...transaction }) => transaction);
+const transactions: Transaction[] = (
+  (transactionsResult.data ?? []) as TxRowRemote[]
+).map((row) => ({
+  id: row.id,
+  type: row.type,
+  amountMinor: row.amount_minor,
+  categoryId: row.category_id,
+  date: row.date,
+  ...(row.note === null ? {} : { note: row.note }),
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+  ...(row.deleted === null ? {} : { deleted: row.deleted }),
+}));
 
-    const categories: Category[] = (
-      (categoriesResult.data ?? []) as CatRowRemote[]
-    ).map(({ user_id: _userId, ...category }) => category);
+const categories: Category[] = (
+  (categoriesResult.data ?? []) as CatRowRemote[]
+).map((row) => ({
+  id: row.id,
+  name: row.name,
+  icon: row.icon,
+  color: row.color,
+  type: row.type,
+  ...(row.budget_minor === null
+    ? {}
+    : { budgetMinor: row.budget_minor }),
+}));
 
     const settings = await getSettings();
 
@@ -133,8 +191,6 @@ export async function restoreNow(): Promise<Result<{ pulled: number }>> {
     await importAll(payload);
 
     // Server is now authoritative; clear the queue.
-    await db.syncQueue.clear();
-
     return {
       ok: true,
       data: { pulled: transactions.length + categories.length },

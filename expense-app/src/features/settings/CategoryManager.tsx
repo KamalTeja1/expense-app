@@ -41,9 +41,6 @@ import Button from '../../components/ui/Button';
 import { toast } from '../../components/ui/Toast';
 import {
   db,
-  putCategory,
-  updateCategory,
-  deleteCategory,
   getAllCategories,
   getAllTxs,
 } from '../../lib/db';
@@ -152,7 +149,7 @@ export default function CategoryManager({ open, onClose }: CategoryManagerProps)
     if (!trimmed) return;
 
     if (editing) {
-      await updateCategory(editing.id, {
+      await db.categories.update(editing.id, {
         name: trimmed,
         icon,
         color,
@@ -165,7 +162,7 @@ export default function CategoryManager({ open, onClose }: CategoryManagerProps)
         '-' +
         Date.now().toString(36);
 
-      await putCategory({
+      await db.categories.put({
         id,
         name: trimmed,
         icon,
@@ -196,7 +193,7 @@ export default function CategoryManager({ open, onClose }: CategoryManagerProps)
       );
     }
 
-    await deleteCategory(confirmingDelete.id);
+    await db.categories.delete(confirmingDelete.id);
     toast('Category deleted', 'success');
     setConfirmingDelete(null);
   };
