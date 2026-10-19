@@ -1,14 +1,15 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import AppShell from './components/layout/AppShell';
 import AuthPage from './pages/AuthPage';
-import DashboardPage from './pages/DashboardPage';
-import TransactionsPage from './pages/TransactionsPage';
-import BudgetsPage from './pages/BudgetsPage';
-import SettingsPage from './pages/SettingsPage';
 import { useAuth } from './store/useAuth';
 import { useAppStore } from './store/useAppStore';
+
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const TransactionsPage = lazy(() => import('./pages/TransactionsPage'));
+const BudgetsPage = lazy(() => import('./pages/BudgetsPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 
 function AppSplash({ label }: { label: string }) {
   return (
@@ -88,13 +89,32 @@ export default function App() {
   return (
     <BrowserRouter>
       <AppShell>
-        <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/transactions" element={<TransactionsPage />} />
-          <Route path="/budgets" element={<BudgetsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Suspense
+          fallback={
+            <div
+              role="status"
+              aria-live="polite"
+              style={{
+                minHeight: 160,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+            >
+              <Loader2 size={20} className="spin" aria-hidden="true" />
+              <span>Loading page…</span>
+            </div>
+          }
+        >
+          <Routes>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/transactions" element={<TransactionsPage />} />
+            <Route path="/budgets" element={<BudgetsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </AppShell>
     </BrowserRouter>
   );
