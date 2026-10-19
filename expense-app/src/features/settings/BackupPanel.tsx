@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { formatDistanceToNow } from 'date-fns';
 import { CloudUpload, CloudDownload, Wifi } from 'lucide-react';
@@ -16,43 +16,62 @@ export default function BackupPanel() {
   const user = useAuth((s) => s.user);
   const settings = useLiveQuery(() => getSettings(), []) as AppSettings | undefined;
 
-  const [testing, setTesting] = useState(false);
-  const [backing, setBacking] = useState(false);
-  const [restoring, setRestoring] = useState(false);
+  const [operation, setOperation] = useState<'test' | 'backup' | 'restore' | 'auto' | null>(null);
+  const actionLock = useRef(false);
+  const testing = operation === 'test';
+  const backing = operation === 'backup';
+  const restoring = operation === 'restore';
+  const savingAuto = operation === 'auto';
+  const busy = operation !== null;
   const [confirmRestore, setConfirmRestore] = useState(false);
 
   const lastBackupLabel = settings?.lastBackupAt
     ? formatDistanceToNow(settings.lastBackupAt, { addSuffix: true })
     : 'Never';
 
-  const handleTest = async () => {
-    setTesting(true);
-    const r = await testConnection();
-    setTesting(false);
-    if (r.ok) toast(`Connected as ${r.data.email ?? 'user'}`, 'success');
-    else toast(r.error, 'error');
+  const runOp = async (
+    kind: 'test' | 'backup' | 'restore' | 'auto',
+    work: () => Promise<void>
+  ) => {
+    if (actionLock.current) return;
+    actionLock.current = true;
+    setOperation(kind);
+    try {
+      await work();
+    } catch (error) {
+      toast(error instanceof Error ? error.message : 'Something went wrong', 'error');
+    } finally {
+      actionLock.current = false;
+      setOperation(null);
+    }
   };
 
-  const handleBackup = async () => {
-    setBacking(true);
-    const r = await backupNow();
-    setBacking(false);
-    if (r.ok) toast(`Backed up ${r.data.pushed} rows`, 'success');
-    else toast(r.error, 'error');
-  };
+  const handleTest = () =>
+    runOp('test', async () => {
+      const r = await testConnection();
+      if (r.ok) toast(`Connected as ${r.data.email ?? 'user'}`, 'success');
+      else toast(r.error, 'error');
+    });
 
-  const handleRestore = async () => {
-    setRestoring(true);
-    const r = await restoreNow();
-    setRestoring(false);
-    setConfirmRestore(false);
-    if (r.ok) toast(`Restored ${r.data.pulled} rows`, 'success');
-    else toast(r.error, 'error');
-  };
+  const handleBackup = () =>
+    runOp('backup', async () => {
+      const r = await backupNow();
+      if (r.ok) toast(`Backed up ${r.data.pushed} rows`, 'success');
+      else toast(r.error, 'error');
+    });
 
-  const handleAutoBackupToggle = async () => {
-    await saveSettings({ autoBackup: !settings?.autoBackup });
-  };
+  const handleRestore = () =>
+    runOp('restore', async () => {
+      const r = await restoreNow();
+      if (r.ok) toast(`Restored ${r.data.pulled} rows`, 'success');
+      else toast(r.error, 'error');
+      setConfirmRestore(false);
+    });
+
+  const handleAutoBackupToggle = () =>
+    runOp('auto', async () => {
+      await saveSettings({ autoBackup: !settings?.autoBackup });
+    });
 
   return (
     <Card>
@@ -70,13 +89,15 @@ export default function BackupPanel() {
           </div>
 
           <div className="bp2-row">
-            <span className="bp2-label">Auto-backup</span>
+            <span className="bp2-label">{savingAuto ? 'Saving…' : 'Auto-backup'}</span>
             <button
               type="button"
               className={clsx('bp2-switch', settings?.autoBackup && 'on')}
               onClick={() => void handleAutoBackupToggle()}
               aria-pressed={settings?.autoBackup ?? false}
               aria-label="Toggle auto-backup"
+              aria-busy={savingAuto}
+              disabled={busy || confirmRestore}
             >
               <span className="bp2-switch-knob" />
             </button>
@@ -92,24 +113,26 @@ export default function BackupPanel() {
               size="sm"
               onClick={() => void handleTest()}
               loading={testing}
+              disabled={busy || confirmRestore}
               leftIcon={<Wifi size={14} />}
             >
-              Test connection
+              {testing ? 'Testing…' : 'Test connection'}
             </Button>
             <Button
               variant="primary"
               size="sm"
               onClick={() => void handleBackup()}
               loading={backing}
+              disabled={busy || confirmRestore}
               leftIcon={<CloudUpload size={14} />}
             >
-              Backup now
+              {backing ? 'Backing up…' : 'Backup now'}
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setConfirmRestore(true)}
-              disabled={restoring}
+              disabled={busy || confirmRestore}
               leftIcon={<CloudDownload size={14} />}
             >
               Restore from server
@@ -126,11 +149,11 @@ export default function BackupPanel() {
                 first if you're not sure.
               </p>
               <div className="bp2-confirm-actions">
-                <Button variant="ghost" onClick={() => setConfirmRestore(false)}>
+                <Button variant="ghost" disabled={busy} onClick={() => setConfirmRestore(false)}>
                   Cancel
                 </Button>
-                <Button variant="primary" loading={restoring} onClick={() => void handleRestore()}>
-                  Restore
+                <Button variant="primary" loading={restoring} disabled={busy} onClick={() => void handleRestore()}>
+                  {restoring ? 'Restoring…' : 'Restore'}
                 </Button>
               </div>
             </div>
