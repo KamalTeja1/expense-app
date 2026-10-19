@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Pencil, Plus, Trash2, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -38,7 +38,7 @@ import {
 } from 'lucide-react';
 import { Modal } from '../../components/ui/Sheet';
 import Button from '../../components/ui/Button';
-import { toast } from '../../components/ui/Toast';
+import { toast } from '../../store/toastStore';
 import {
   db,
   getAllCategories,
@@ -47,6 +47,8 @@ import {
 import { CATEGORY_COLORS } from '../../lib/categories';
 import type { Category, TxType } from '../../lib/types';
 import './CategoryManager.css';
+
+const EMPTY_TRANSACTIONS: Awaited<ReturnType<typeof getAllTxs>> = [];
 
 export interface CategoryManagerProps {
   open: boolean;
@@ -93,7 +95,7 @@ function iconFor(name: string): LucideIcon {
 
 export default function CategoryManager({ open, onClose }: CategoryManagerProps) {
   const categories = useLiveQuery(() => getAllCategories(), []) ?? [];
-  const txs = useLiveQuery(() => getAllTxs(), []) ?? [];
+  const txs = useLiveQuery(() => getAllTxs(), []) ?? EMPTY_TRANSACTIONS;
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
@@ -103,20 +105,6 @@ export default function CategoryManager({ open, onClose }: CategoryManagerProps)
   const [icon, setIcon] = useState('MoreHorizontal');
   const [color, setColor] = useState<string>(CATEGORY_COLORS[0]);
   const [type, setType] = useState<TxType>('expense');
-
-  useEffect(() => {
-    if (editing) {
-      setName(editing.name);
-      setIcon(editing.icon);
-      setColor(editing.color);
-      setType(editing.type);
-    } else {
-      setName('');
-      setIcon('MoreHorizontal');
-      setColor(CATEGORY_COLORS[0]);
-      setType('expense');
-    }
-  }, [editing, formOpen]);
 
 const usage = useMemo(() => {
   const map = new Map<string, number>();
@@ -137,11 +125,19 @@ const usage = useMemo(() => {
 
   const openAdd = () => {
     setEditing(null);
+    setName('');
+    setIcon('MoreHorizontal');
+    setColor(CATEGORY_COLORS[0]);
+    setType('expense');
     setFormOpen(true);
   };
 
   const openEdit = (category: Category) => {
     setEditing(category);
+    setName(category.name);
+    setIcon(category.icon);
+    setColor(category.color);
+    setType(category.type);
     setFormOpen(true);
   };
 

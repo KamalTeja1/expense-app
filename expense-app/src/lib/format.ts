@@ -22,7 +22,7 @@ export function formatMoney(
 }
 
 export function parseMoneyToMinor(input: string): number {
-  const cleaned = input.replace(/[^0-9.\-]/g, '');
+  const cleaned = input.replace(/[^0-9.-]/g, '');
   if (cleaned === '') return 0;
   const value = parseFloat(cleaned);
   if (!Number.isFinite(value)) return 0;

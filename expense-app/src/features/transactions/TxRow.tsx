@@ -5,7 +5,7 @@ import { useCategoryMap } from '../../lib/useCategoryMap';
 import { formatMoney, formatDayLabel } from '../../lib/format';
 import { useAddTxBus } from '../../store/addTxBus';
 import { softDeleteTx } from '../../lib/db';
-import { toast } from '../../components/ui/Toast';
+import { toast } from '../../store/toastStore';
 import type { Transaction } from '../../lib/types';
 import TxContextSheet from './TxContextSheet';
 import './TxRow.css';

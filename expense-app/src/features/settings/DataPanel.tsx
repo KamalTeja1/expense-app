@@ -2,7 +2,7 @@ import { useRef, type ChangeEvent } from 'react';
 import { Download, Upload, Trash2 } from 'lucide-react';
 import { Card, CardBody, CardHeader } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
-import { toast } from '../../components/ui/Toast';
+import { toast } from '../../store/toastStore';
 import { exportAll, importAll, db } from '../../lib/db';
 import type { BackupPayload } from '../../lib/types';
 import './DataPanel.css';

@@ -12,6 +12,8 @@ import TxFilters, { type FilterValue } from '../features/transactions/TxFilters'
 import TransactionsSkeleton from '../features/transactions/TransactionsSkeleton';
 import './TransactionsPage.css';
 
+const EMPTY_TRANSACTIONS: Awaited<ReturnType<typeof getTxsForMonth>> = [];
+
 export default function TransactionsPage() {
   const monthKey = useAppStore((s) => s.monthKey);
   const setMonthKey = useAppStore((s) => s.setMonthKey);
@@ -22,7 +24,7 @@ export default function TransactionsPage() {
 
   const txsQuery = useLiveQuery(() => getTxsForMonth(monthKey), [monthKey]);
   const loading = txsQuery === undefined;
-  const txs = txsQuery ?? [];
+  const txs = txsQuery ?? EMPTY_TRANSACTIONS;
 
   const filtered = useMemo(() => {
     let r = txs;

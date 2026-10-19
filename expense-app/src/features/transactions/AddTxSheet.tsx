@@ -1,16 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 import Sheet from '../../components/ui/Sheet';
 import SegmentedTabs from '../../components/ui/SegmentedTabs';
 import Button from '../../components/ui/Button';
-import { toast } from '../../components/ui/Toast';
+import { toast } from '../../store/toastStore';
 import { useAddTxBus } from '../../store/addTxBus';
 import { useAppStore } from '../../store/useAppStore';
 import { createTx, updateTx, getAllCategories } from '../../lib/db';
 import { parseMoneyToMinor, todayLocal } from '../../lib/format';
 import { ICON_MAP } from '../../lib/categories';
-import type { TxType } from '../../lib/types';
+import type { Transaction, TxType } from '../../lib/types';
 import './AddTxSheet.css';
 
 
@@ -30,13 +30,34 @@ export default function AddTxSheet() {
   const open = useAddTxBus((s) => s.open);
   const editing = useAddTxBus((s) => s.editing);
   const closeSheet = useAddTxBus((s) => s.closeSheet);
+  if (!open) return null;
+
+  return (
+    <AddTxForm
+      key={editing?.id ?? 'new-transaction'}
+      editing={editing}
+      closeSheet={closeSheet}
+    />
+  );
+}
+
+interface AddTxFormProps {
+  editing?: Transaction;
+  closeSheet: () => void;
+}
+
+function AddTxForm({ editing, closeSheet }: AddTxFormProps) {
   const currency = useAppStore((s) => s.currency);
 
-  const [type, setType] = useState<TxType>('expense');
-  const [amountStr, setAmountStr] = useState('');
-  const [categoryId, setCategoryId] = useState<string>('');
-  const [date, setDate] = useState<string>(() => todayIso());
-  const [note, setNote] = useState('');
+  const [type, setType] = useState<TxType>(editing?.type ?? 'expense');
+  const [amountStr, setAmountStr] = useState(() =>
+    editing ? (editing.amountMinor / 100).toString() : ''
+  );
+  const [selectedCategoryId, setCategoryId] = useState(
+    editing?.categoryId ?? ''
+  );
+  const [date, setDate] = useState(() => editing?.date ?? todayIso());
+  const [note, setNote] = useState(editing?.note ?? '');
   const [saving, setSaving] = useState(false);
   const saveLock = useRef(false);
 
@@ -44,35 +65,16 @@ export default function AddTxSheet() {
     if (!saveLock.current) closeSheet();
   };
 
-  const categories = useLiveQuery(() => getAllCategories(), []) ?? [];
+  const categories = useLiveQuery(() => getAllCategories(), []);
 
   const filtered = useMemo(
-    () => categories.filter((c) => c.type === type),
+    () => (categories ?? []).filter((c) => c.type === type),
     [categories, type]
   );
 
-  useEffect(() => {
-    if (!open) return;
-    if (editing) {
-      setType(editing.type);
-      setAmountStr((editing.amountMinor / 100).toString());
-      setCategoryId(editing.categoryId);
-      setDate(editing.date);
-      setNote(editing.note ?? '');
-    } else {
-      setType('expense');
-      setAmountStr('');
-      setCategoryId('');
-      setDate(todayIso());
-      setNote('');
-    }
-  }, [open, editing]);
-
-  useEffect(() => {
-    if (!categoryId) return;
-    const stillValid = filtered.some((c) => c.id === categoryId);
-    if (!stillValid) setCategoryId('');
-  }, [filtered, categoryId]);
+  const categoryId = filtered.some((c) => c.id === selectedCategoryId)
+    ? selectedCategoryId
+    : '';
 
   const amountMinor = parseMoneyToMinor(amountStr);
   const canSave = amountMinor > 0 && categoryId !== '';
@@ -122,7 +124,7 @@ export default function AddTxSheet() {
 
   return (
     <Sheet
-      open={open}
+      open={true}
       onClose={handleClose}
       title={editing ? 'Edit transaction' : 'Add transaction'}
     >
@@ -134,7 +136,12 @@ export default function AddTxSheet() {
           ]}
           value={type}
           onChange={(v) => {
-            if (!saveLock.current) setType(v as TxType);
+            if (saveLock.current) return;
+            const nextType = v as TxType;
+            if (nextType !== type) {
+              setType(nextType);
+              setCategoryId('');
+            }
           }}
         />
 

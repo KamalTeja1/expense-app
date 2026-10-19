@@ -5,7 +5,7 @@ import { CloudUpload, CloudDownload, Wifi } from 'lucide-react';
 import clsx from 'clsx';
 import { Card, CardBody, CardHeader } from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
-import { toast } from '../../components/ui/Toast';
+import { toast } from '../../store/toastStore';
 import { getSettings, saveSettings } from '../../lib/db';
 import { useAuth } from '../../store/useAuth';
 import { testConnection, backupNow, restoreNow } from '../../lib/sync';

@@ -23,12 +23,6 @@ export default function AnimatedNumber({
       '(prefers-reduced-motion: reduce)'
     ).matches;
 
-    if (reducedMotion) {
-      displayRef.current = value;
-      setDisplay(value);
-      return;
-    }
-
     const start = performance.now();
     const from = displayRef.current;
     const to = value;
@@ -38,15 +32,17 @@ export default function AnimatedNumber({
     let raf = 0;
 
     const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / duration);
+      const t =
+        reducedMotion || duration <= 0
+          ? 1
+          : Math.min(1, (now - start) / duration);
       const eased = 1 - Math.pow(1 - t, 3);
       const next = Math.round(from + (to - from) * eased);
+      displayRef.current = next;
       setDisplay(next);
 
       if (t < 1) {
         raf = requestAnimationFrame(tick);
-      } else {
-        displayRef.current = to;
       }
     };
 

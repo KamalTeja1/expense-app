@@ -1,7 +1,7 @@
 import { Copy, Pencil, Trash2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import Sheet from '../../components/ui/Sheet';
-import { toast } from '../../components/ui/Toast';
+import { toast } from '../../store/toastStore';
 import { createTx, softDeleteTx } from '../../lib/db';
 import { useAddTxBus } from '../../store/addTxBus';
 import type { Transaction } from '../../lib/types';

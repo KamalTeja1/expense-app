@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { LogOut, Tags } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { Card, CardBody, CardHeader } from '../components/ui/Card';
-import { toast } from '../components/ui/Toast';
+import { toast } from '../store/toastStore';
 import CategoryManager from '../features/settings/CategoryManager';
 import BackupPanel from '../features/settings/BackupPanel';
 import DataPanel from '../features/settings/DataPanel';

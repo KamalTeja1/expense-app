@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { Download, X } from 'lucide-react';
 import Button from './Button';
 import './InstallPrompt.css';
@@ -15,79 +15,75 @@ declare global {
   }
 }
 
+const DISMISS_KEY = 'installPromptDismissedAt';
+const DISMISS_DURATION_MS = 14 * 86400 * 1000;
+
+type PromptMode = 'hidden' | 'ios' | 'native';
+
+function readPromptMode(): PromptMode {
+  // Already installed?
+  const standalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    // @ts-expect-error iOS Safari only
+    window.navigator.standalone === true;
+
+  if (standalone) return 'hidden';
+
+  // Dismissed recently?
+  const dismissedAt = Number(localStorage.getItem(DISMISS_KEY));
+  if (dismissedAt && Date.now() - dismissedAt < DISMISS_DURATION_MS) {
+    return 'hidden';
+  }
+
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) ? 'ios' : 'native';
+}
+
+// index.html captures beforeinstallprompt and emits installpromptready.
+function subscribeToInstallPrompt(onChange: () => void) {
+  window.addEventListener('installpromptready', onChange);
+  window.addEventListener('appinstalled', onChange);
+
+  return () => {
+    window.removeEventListener('installpromptready', onChange);
+    window.removeEventListener('appinstalled', onChange);
+  };
+}
+
+function getDeferredInstallPrompt() {
+  return window.__deferredInstallPrompt;
+}
+
 export default function InstallPrompt() {
-  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
-  const [visible, setVisible] = useState(false);
-  const [isIos, setIsIos] = useState(false);
+  const [mode] = useState(readPromptMode);
+  const [dismissed, setDismissed] = useState(false);
+  const deferred = useSyncExternalStore(
+    subscribeToInstallPrompt,
+    getDeferredInstallPrompt
+  );
 
-  useEffect(() => {
-    // Already installed?
-    const standalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      // @ts-expect-error iOS Safari only
-      window.navigator.standalone === true;
-
-    if (standalone) return;
-
-    // Dismissed recently?
-    const dismissedAt = localStorage.getItem('installPromptDismissedAt');
-    if (dismissedAt && Date.now() - Number(dismissedAt) < 14 * 86400 * 1000) {
-      return;
-    }
-
-    // iOS detection
-    const ua = navigator.userAgent;
-    const ios = /iphone|ipad|ipod/i.test(ua);
-    if (ios) {
-      setIsIos(true);
-      setVisible(true);
-      return;
-    }
-
-    // Check if the event already fired before React mounted
-    if (window.__deferredInstallPrompt) {
-      setDeferred(window.__deferredInstallPrompt);
-      setVisible(true);
-      return;
-    }
-
-    // Otherwise wait for the event
-    const onReady = () => {
-      if (window.__deferredInstallPrompt) {
-        setDeferred(window.__deferredInstallPrompt);
-        setVisible(true);
-      }
-    };
-
-    const onInstalled = () => {
-      setVisible(false);
-      setDeferred(null);
-    };
-
-    window.addEventListener('installpromptready', onReady);
-    window.addEventListener('appinstalled', onInstalled);
-
-    return () => {
-      window.removeEventListener('installpromptready', onReady);
-      window.removeEventListener('appinstalled', onInstalled);
-    };
-  }, []);
+  const isIos = mode === 'ios';
+  const visible =
+    !dismissed && (isIos || (mode === 'native' && deferred !== null));
 
   const handleInstall = async () => {
-    const evt = deferred ?? window.__deferredInstallPrompt;
-    if (!evt) return;
-    await evt.prompt();
-    const choice = await evt.userChoice;
-    if (choice.outcome === 'accepted') {
-      setVisible(false);
+    if (!deferred) return;
+
+    try {
+      await deferred.prompt();
+      await deferred.userChoice;
+    } catch {
+      // The browser may reject a prompt that is no longer available.
+    } finally {
+      // A deferred install prompt can only be used once.
+      window.__deferredInstallPrompt = null;
+      window.__installPromptReady = false;
+      setDismissed(true);
     }
-    window.__deferredInstallPrompt = null;
-    setDeferred(null);
   };
 
   const handleDismiss = () => {
-    localStorage.setItem('installPromptDismissedAt', String(Date.now()));
-    setVisible(false);
+    localStorage.setItem(DISMISS_KEY, String(Date.now()));
+    setDismissed(true);
   };
 
   if (!visible) return null;

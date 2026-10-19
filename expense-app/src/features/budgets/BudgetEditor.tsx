@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Sheet from '../../components/ui/Sheet';
 import Button from '../../components/ui/Button';
-import { toast } from '../../components/ui/Toast';
+import { toast } from '../../store/toastStore';
 import { db } from '../../lib/db';
 import { parseMoneyToMinor } from '../../lib/format';
 import { getCategory } from '../../lib/categories';
@@ -14,20 +14,26 @@ export interface BudgetEditorProps {
   onClose: () => void;
 }
 
-export default function BudgetEditor({
+export default function BudgetEditor(props: BudgetEditorProps) {
+  if (!props.open) return null;
+
+  return (
+    <BudgetEditorForm
+      key={props.category?.id ?? 'new-budget'}
+      {...props}
+    />
+  );
+}
+
+function BudgetEditorForm({
   open,
   category,
   onClose,
 }: BudgetEditorProps) {
-  const [amountStr, setAmountStr] = useState('');
+  const [amountStr, setAmountStr] = useState(() =>
+    category?.budgetMinor ? (category.budgetMinor / 100).toString() : ''
+  );
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (!open) return;
-    setAmountStr(
-      category?.budgetMinor ? (category.budgetMinor / 100).toString() : ''
-    );
-  }, [open, category]);
 
   const handleSave = async () => {
     if (!category) return;

@@ -11,14 +11,17 @@ import BudgetEditor from '../features/budgets/BudgetEditor';
 import type { Category } from '../lib/types';
 import './BudgetsPage.css';
 
+const EMPTY_CATEGORIES: Awaited<ReturnType<typeof getAllCategories>> = [];
+const EMPTY_TRANSACTIONS: Awaited<ReturnType<typeof getTxsForMonth>> = [];
+
 export default function BudgetsPage() {
   const { monthKey, currency } = useAppStore();
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingCat, setEditingCat] = useState<Category | undefined>();
 
-  const categories = useLiveQuery(() => getAllCategories(), []) ?? [];
-  const txs = useLiveQuery(() => getTxsForMonth(monthKey), [monthKey]) ?? [];
+  const categories = useLiveQuery(() => getAllCategories(), []) ?? EMPTY_CATEGORIES;
+  const txs = useLiveQuery(() => getTxsForMonth(monthKey), [monthKey]) ?? EMPTY_TRANSACTIONS;
 
   const spentByCat = useMemo(() => {
     const m = new Map<string, number>();

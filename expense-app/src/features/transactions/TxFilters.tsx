@@ -7,6 +7,8 @@ import { ICON_MAP } from '../../lib/categories';
 import type { TxType } from '../../lib/types';
 import './TxFilters.css';
 
+const EMPTY_CATEGORIES: Awaited<ReturnType<typeof getAllCategories>> = [];
+
 export type FilterValue =
   | { kind: 'all' }
   | { kind: 'type'; type: TxType }
@@ -20,7 +22,7 @@ export interface TxFiltersProps {
 }
 
 export default function TxFilters({ value, onChange, search, onSearch }: TxFiltersProps) {
-  const categories = useLiveQuery(() => getAllCategories(), []) ?? [];
+  const categories = useLiveQuery(() => getAllCategories(), []) ?? EMPTY_CATEGORIES;
   const expenseCats = useMemo(() => categories.filter((c) => c.type === 'expense'), [categories]);
   const incomeCats = useMemo(() => categories.filter((c) => c.type === 'income'), [categories]);
 

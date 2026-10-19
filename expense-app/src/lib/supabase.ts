@@ -8,7 +8,6 @@ let client: SupabaseClient | null = null;
 export function getSupabase(): SupabaseClient | null {
   if (client) return client;
   if (!url || !key) {
-    // eslint-disable-next-line no-console
     console.warn('[supabase] VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY missing');
     return null;
   }
