@@ -12,17 +12,30 @@ import './SettingsPage.css';
 
 export default function SettingsPage() {
   const [catOpen, setCatOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
   const user = useAuth((s) => s.user);
   const signOut = useAuth((s) => s.signOut);
 
   const handleSignOut = async () => {
+    if (signingOut) return;
     const confirmed = window.confirm(
-      'Sign out? Your local data stays on this device. ' +
-        'Remember to back up to the server first.'
+      'Sign out? Your local data stays on this device. ' + 'Remember to back up to the server first.'
     );
     if (!confirmed) return;
-    await signOut();
-    toast('Signed out', 'info');
+
+    try {
+      setSigningOut(true);
+      await signOut();
+      toast('Signed out', 'info');
+    } catch (error) {
+      toast(
+        error instanceof Error ? error.message : 'Sign out failed. Please try again.',
+        'error'
+      );
+    } finally {
+      setSigningOut(false);
+    }
   };
 
   return (
@@ -45,7 +58,12 @@ export default function SettingsPage() {
       <Card>
         <CardHeader title="Categories" />
         <CardBody>
-          <button type="button" className="settings-row" onClick={() => setCatOpen(true)}>
+          <button
+            type="button"
+            className="settings-row"
+            onClick={() => setCatOpen(true)}
+            disabled={signingOut}
+          >
             <Tags size={18} />
             <span className="settings-row-label">Manage categories</span>
             <span className="settings-row-arrow">›</span>
@@ -63,8 +81,10 @@ export default function SettingsPage() {
             leftIcon={<LogOut size={16} />}
             onClick={() => void handleSignOut()}
             style={{ width: '100%' }}
+            loading={signingOut}
+            disabled={signingOut}
           >
-            Sign out
+            {signingOut ? 'Signing out…' : 'Sign out'}
           </Button>
         </CardBody>
       </Card>

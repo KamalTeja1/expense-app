@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useRef, useState } from 'react';
 import { LogIn } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { useAuth } from '../store/useAuth';
@@ -10,16 +10,33 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const submitLock = useRef(false);
 
   const signIn = useAuth((s) => s.signIn);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (submitLock.current || !isSupabaseConfigured) return;
+
+    submitLock.current = true;
     setLocalError(null);
     setSubmitting(true);
-    const result = await signIn(email.trim(), password);
-    if (!result.ok) setLocalError(result.error ?? 'Sign in failed');
-    setSubmitting(false);
+
+    try {
+      const result = await signIn(email.trim(), password);
+      if (!result.ok) {
+        setLocalError(result.error ?? 'Sign in failed');
+      }
+    } catch (error) {
+      setLocalError(
+        error instanceof Error
+          ? error.message
+          : 'Unable to sign in. Please try again.'
+      );
+    } finally {
+      submitLock.current = false;
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -38,7 +55,11 @@ export default function AuthPage() {
           </div>
         )}
 
-        <form className="auth-form" onSubmit={(e) => void handleSubmit(e)}>
+        <form
+          className="auth-form"
+          onSubmit={(e) => void handleSubmit(e)}
+          aria-busy={submitting}
+        >
           <label className="auth-field">
             <span className="auth-label">Email</span>
             <input
@@ -48,6 +69,7 @@ export default function AuthPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={submitting}
             />
           </label>
 
@@ -60,10 +82,13 @@ export default function AuthPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={submitting}
             />
           </label>
 
-          {localError && <div className="auth-error">{localError}</div>}
+          {localError && (
+            <div className="auth-error" role="alert">{localError}</div>
+          )}
 
           <Button
             variant="primary"
@@ -73,7 +98,7 @@ export default function AuthPage() {
             leftIcon={<LogIn size={16} />}
             style={{ width: '100%' }}
           >
-            Sign in
+            {submitting ? 'Signing in…' : 'Sign in'}
           </Button>
         </form>
 
