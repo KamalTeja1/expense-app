@@ -1,4 +1,5 @@
 import { Copy, Pencil, Trash2 } from 'lucide-react';
+import { useRef, useState } from 'react';
 import Sheet from '../../components/ui/Sheet';
 import { toast } from '../../components/ui/Toast';
 import { createTx, softDeleteTx } from '../../lib/db';
@@ -13,35 +14,55 @@ export interface TxContextSheetProps {
 
 export default function TxContextSheet({ tx, onClose }: TxContextSheetProps) {
   const openSheet = useAddTxBus((s) => s.openSheet);
+  const [busy, setBusy] = useState(false);
+  const actionLock = useRef(false);
 
   const handleEdit = () => {
-    if (!tx) return;
+    if (!tx || busy) return;
     openSheet(tx);
     onClose();
   };
 
   const handleDuplicate = async () => {
-    if (!tx) return;
-    await createTx({ ...tx, id: undefined });
-    toast('Duplicated', 'success');
-    onClose();
+    if (!tx || actionLock.current) return;
+    actionLock.current = true;
+    setBusy(true);
+    try {
+      await createTx({ ...tx, id: undefined });
+      toast('Duplicated', 'success');
+      onClose();
+    } catch (error) {
+      toast(error instanceof Error ? error.message : 'Duplicate failed', 'error');
+    } finally {
+      actionLock.current = false;
+      setBusy(false);
+    }
   };
 
   const handleDelete = async () => {
-    if (!tx) return;
-    await softDeleteTx(tx.id);
-    toast('Deleted', 'success');
-    onClose();
+    if (!tx || actionLock.current) return;
+    actionLock.current = true;
+    setBusy(true);
+    try {
+      await softDeleteTx(tx.id);
+      toast('Deleted', 'success');
+      onClose();
+    } catch (error) {
+      toast(error instanceof Error ? error.message : 'Delete failed', 'error');
+    } finally {
+      actionLock.current = false;
+      setBusy(false);
+    }
   };
 
   return (
-    <Sheet open={!!tx} onClose={onClose}>
+    <Sheet open={!!tx} onClose={() => { if (!busy) onClose(); }}>
       <div className="ctx-root">
-        <button type="button" className="ctx-item" onClick={handleEdit}>
+        <button type="button" className="ctx-item" onClick={handleEdit} disabled={busy}>
           <Pencil size={18} />
           <span>Edit</span>
         </button>
-        <button type="button" className="ctx-item" onClick={() => void handleDuplicate()}>
+        <button type="button" className="ctx-item" onClick={() => void handleDuplicate()} disabled={busy}>
           <Copy size={18} />
           <span>Duplicate</span>
         </button>
@@ -49,6 +70,7 @@ export default function TxContextSheet({ tx, onClose }: TxContextSheetProps) {
           type="button"
           className="ctx-item danger"
           onClick={() => void handleDelete()}
+          disabled={busy}
         >
           <Trash2 size={18} />
           <span>Delete</span>

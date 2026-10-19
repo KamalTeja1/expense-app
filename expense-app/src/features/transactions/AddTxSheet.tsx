@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 import Sheet from '../../components/ui/Sheet';
@@ -37,6 +37,12 @@ export default function AddTxSheet() {
   const [categoryId, setCategoryId] = useState<string>('');
   const [date, setDate] = useState<string>(() => todayIso());
   const [note, setNote] = useState('');
+  const [saving, setSaving] = useState(false);
+  const saveLock = useRef(false);
+
+  const handleClose = () => {
+    if (!saveLock.current) closeSheet();
+  };
 
   const categories = useLiveQuery(() => getAllCategories(), []) ?? [];
 
@@ -72,7 +78,11 @@ export default function AddTxSheet() {
   const canSave = amountMinor > 0 && categoryId !== '';
 
   const handleSave = async () => {
-    if (!canSave) return;
+    if (!canSave || saveLock.current) return;
+
+    saveLock.current = true;
+    setSaving(true);
+
     const payload = {
       type,
       amountMinor,
@@ -80,13 +90,26 @@ export default function AddTxSheet() {
       date,
       note: note.trim() || undefined,
     };
-    if (editing) {
-      await updateTx(editing.id, payload);
-      toast('Updated', 'success');
-    } else {
-      await createTx(payload);
-      toast('Saved', 'success');
+
+    try {
+      if (editing) {
+        await updateTx(editing.id, payload);
+      } else {
+        await createTx(payload);
+      }
+    } catch (error) {
+      toast(
+        error instanceof Error ? error.message : 'Could not save. Please try again.',
+        'error'
+      );
+      return;
+    } finally {
+      saveLock.current = false;
+      setSaving(false);
     }
+
+    toast(editing ? 'Updated' : 'Saved', 'success');
+
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
       try {
         navigator.vibrate(10);
@@ -100,17 +123,19 @@ export default function AddTxSheet() {
   return (
     <Sheet
       open={open}
-      onClose={closeSheet}
+      onClose={handleClose}
       title={editing ? 'Edit transaction' : 'Add transaction'}
     >
-      <div className="tx-sheet">
+      <div className="tx-sheet" aria-busy={saving}>
         <SegmentedTabs
           items={[
             { id: 'expense', label: 'Expense', icon: ArrowUpRight },
             { id: 'income', label: 'Income', icon: ArrowDownLeft },
           ]}
           value={type}
-          onChange={(v) => setType(v as TxType)}
+          onChange={(v) => {
+            if (!saveLock.current) setType(v as TxType);
+          }}
         />
 
         <div className="tx-amount-display">
@@ -122,6 +147,7 @@ export default function AddTxSheet() {
             placeholder="0"
             value={amountStr}
             onChange={(e) => setAmountStr(e.target.value)}
+            disabled={saving}
             autoFocus
           />
         </div>
@@ -136,6 +162,7 @@ export default function AddTxSheet() {
                 type="button"
                 className={active ? 'tx-cat active' : 'tx-cat'}
                 onClick={() => setCategoryId(c.id)}
+                disabled={saving}
                 aria-label={c.name}
               >
                 <span
@@ -160,6 +187,7 @@ export default function AddTxSheet() {
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
+            disabled={saving}
           />
         </label>
 
@@ -172,6 +200,7 @@ export default function AddTxSheet() {
             maxLength={80}
             value={note}
             onChange={(e) => setNote(e.target.value)}
+            disabled={saving}
           />
         </label>
 
@@ -179,10 +208,17 @@ export default function AddTxSheet() {
           <Button
             variant="primary"
             onClick={() => void handleSave()}
-            disabled={!canSave}
+            disabled={!canSave || saving}
+            loading={saving}
             style={{ width: '100%' }}
           >
-            {editing ? 'Update' : type === 'expense' ? 'Save expense' : 'Save income'}
+            {saving
+              ? 'Saving…'
+              : editing
+                ? 'Update'
+                : type === 'expense'
+                  ? 'Save expense'
+                  : 'Save income'}
           </Button>
         </div>
       </div>
