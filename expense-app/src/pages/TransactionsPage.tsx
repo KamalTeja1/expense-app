@@ -9,6 +9,7 @@ import { Card, CardBody } from '../components/ui/Card';
 import EmptyState from '../components/ui/EmptyState';
 import GroupedList from '../features/transactions/GroupedList';
 import TxFilters, { type FilterValue } from '../features/transactions/TxFilters';
+import TransactionsSkeleton from '../features/transactions/TransactionsSkeleton';
 import './TransactionsPage.css';
 
 export default function TransactionsPage() {
@@ -19,7 +20,9 @@ export default function TransactionsPage() {
   const [filter, setFilter] = useState<FilterValue>({ kind: 'all' });
   const [search, setSearch] = useState('');
 
-  const txs = useLiveQuery(() => getTxsForMonth(monthKey), [monthKey]) ?? [];
+  const txsQuery = useLiveQuery(() => getTxsForMonth(monthKey), [monthKey]);
+  const loading = txsQuery === undefined;
+  const txs = txsQuery ?? [];
 
   const filtered = useMemo(() => {
     let r = txs;
@@ -58,7 +61,9 @@ export default function TransactionsPage() {
 
       <TxFilters value={filter} onChange={setFilter} search={search} onSearch={setSearch} />
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <TransactionsSkeleton />
+      ) : filtered.length === 0 ? (
         <Card>
           <EmptyState
             icon={ReceiptText}
