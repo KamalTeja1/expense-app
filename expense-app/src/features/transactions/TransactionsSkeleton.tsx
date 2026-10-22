@@ -1,33 +1,32 @@
 import { Card, CardBody } from '../../components/ui/Card';
+import Skeleton from '../../components/ui/Skeleton';
+import './TransactionsSkeleton.css';
 
 export default function TransactionsSkeleton() {
   return (
-    <Card>
-      <CardBody>
-        <div style={{ display: 'grid', gap: 12 }} aria-hidden="true">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <div
-              key={index}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                borderBottom: '1px solid #e2e8f0',
-                padding: '10px 0',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 28, height: 28, borderRadius: 999, background: '#dbeafe' }} />
-                <div style={{ display: 'grid', gap: 6 }}>
-                  <div style={{ width: 160, height: 10, borderRadius: 99, background: '#bfdbfe' }} />
-                  <div style={{ width: 100, height: 10, borderRadius: 99, background: '#dbeafe' }} />
+    <div role="status" aria-label="Loading transactions">
+      <Card>
+        <CardBody>
+          <div className="tx-skel-list" aria-hidden="true">
+            {Array.from({ length: 6 }, (_, index) => (
+              <div
+                key={index}
+                className="tx-skel-row"
+                style={{ animationDelay: `${index * 55}ms` }}
+              >
+                <div className="tx-skel-left">
+                  <Skeleton w={42} h={42} radius={14} />
+                  <div className="tx-skel-lines">
+                    <Skeleton w={`${112 + (index % 3) * 20}px`} h={12} />
+                    <Skeleton w={76} h={9} />
+                  </div>
                 </div>
+                <Skeleton w={64} h={13} />
               </div>
-              <div style={{ width: 90, height: 10, borderRadius: 99, background: '#bfdbfe' }} />
-            </div>
-          ))}
-        </div>
-      </CardBody>
-    </Card>
+            ))}
+          </div>
+        </CardBody>
+      </Card>
+    </div>
   );
 }

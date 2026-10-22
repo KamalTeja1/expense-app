@@ -1,6 +1,5 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import clsx from 'clsx';
-import { Loader2 } from 'lucide-react';
 import './Button.css';
 
 export type ButtonVariant = 'primary' | 'ghost' | 'danger' | 'subtle';
@@ -44,9 +43,14 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
         className
       )}
       disabled={disabled || loading}
+      aria-busy={loading || rest['aria-busy']}
       data-testid={dataTestId ?? 'btn'}
     >
-      {loading ? <Loader2 className="btn-spinner" size={16} /> : leftIcon}
+      {loading ? (
+        <span className="btn-loading-bars" aria-hidden="true">
+          <span /><span /><span />
+        </span>
+      ) : leftIcon}
       <span className="btn-label">{children}</span>
       {!loading && rightIcon}
     </button>

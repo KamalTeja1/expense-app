@@ -8,8 +8,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--line, #e2e8f0);
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border, #e4edf5);
+  animation: tx-skel-enter 450ms ease both;
 }
 
 .tx-skel-row:last-child {
@@ -19,50 +20,25 @@
 .tx-skel-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
-}
-
-.tx-skel-dot {
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  background: #e2e8f0;
-  flex: 0 0 auto;
 }
 
 .tx-skel-lines {
   display: grid;
-  gap: 7px;
+  gap: 9px;
 }
 
-.tx-skel-line {
-  height: 10px;
-  border-radius: 999px;
-  background: #e2e8f0;
+@keyframes tx-skel-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.w-lg {
-  width: 148px;
-}
-.w-md {
-  width: 84px;
-}
-.w-sm {
-  width: 92px;
+@media (max-width: 380px) {
+  .tx-skel-lines { max-width: 120px; }
+  .tx-skel-lines .skeleton { max-width: 100%; }
 }
 
-.shimmer {
-  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 37%, #e2e8f0 63%);
-  background-size: 400% 100%;
-  animation: shimmer 1.25s ease-in-out infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0 50%;
-  }
+@media (prefers-reduced-motion: reduce) {
+  .tx-skel-row { animation: none; }
 }
