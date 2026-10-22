@@ -136,3 +136,23 @@
   padding-top: 12px;
   background: linear-gradient(to bottom, transparent, white 30%);
 }
+
+/* INLINE AMOUNT CALCULATOR */
+.tx-amount-feedback {
+  margin-top: -8px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-600);
+  overflow-wrap: anywhere;
+}
+
+.tx-amount-feedback-error {
+  color: #b42332;
+}
+
+.tx-amount-input:focus-visible {
+  outline: 2px solid var(--blue-375);
+  outline-offset: 4px;
+  border-radius: 6px;
+}

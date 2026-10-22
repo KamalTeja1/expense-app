@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 import Sheet from '../../components/ui/Sheet';
@@ -8,7 +8,8 @@ import { toast } from '../../store/toastStore';
 import { useAddTxBus } from '../../store/addTxBus';
 import { useAppStore } from '../../store/useAppStore';
 import { createTx, updateTx, getAllCategories } from '../../lib/db';
-import { parseMoneyToMinor, todayLocal } from '../../lib/format';
+import { formatMoney, todayLocal } from '../../lib/format';
+import { evaluateAmount } from '../../lib/amountExpression';
 import { ICON_MAP } from '../../lib/categories';
 import type { Transaction, TxType } from '../../lib/types';
 import './AddTxSheet.css';
@@ -60,6 +61,7 @@ function AddTxForm({ editing, closeSheet }: AddTxFormProps) {
   const [note, setNote] = useState(editing?.note ?? '');
   const [saving, setSaving] = useState(false);
   const saveLock = useRef(false);
+  const amountFeedbackId = useId();
 
   const handleClose = () => {
     if (!saveLock.current) closeSheet();
@@ -76,8 +78,9 @@ function AddTxForm({ editing, closeSheet }: AddTxFormProps) {
     ? selectedCategoryId
     : '';
 
-  const amountMinor = parseMoneyToMinor(amountStr);
-  const canSave = amountMinor > 0 && categoryId !== '';
+  const calculation = useMemo(() => evaluateAmount(amountStr), [amountStr]);
+  const amountMinor = calculation.amountMinor ?? 0;
+  const canSave = calculation.amountMinor !== null && categoryId !== '';
 
   const handleSave = async () => {
     if (!canSave || saveLock.current) return;
@@ -150,13 +153,35 @@ function AddTxForm({ editing, closeSheet }: AddTxFormProps) {
           <input
             className="tx-amount-input"
             type="text"
-            inputMode="decimal"
+            inputMode="text"
+            maxLength={120}
+            aria-label="Amount or calculation"
+            aria-describedby={amountFeedbackId}
+            aria-invalid={calculation.error ? true : undefined}
+            autoComplete="off"
+            spellCheck={false}
             placeholder="0"
             value={amountStr}
             onChange={(e) => setAmountStr(e.target.value)}
             disabled={saving}
             autoFocus
           />
+        </div>
+
+        <div
+          id={amountFeedbackId}
+          className={calculation.error
+            ? 'tx-amount-feedback tx-amount-feedback-error'
+            : 'tx-amount-feedback'}
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {calculation.error
+            ? calculation.error
+            : calculation.isExpression && calculation.amountMinor !== null
+              ? `= ${formatMoney(calculation.amountMinor, currency)}`
+              : 'You can also type a calculation, like 50+60'}
         </div>
 
         <div className="tx-category-row">
